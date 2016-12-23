@@ -1,0 +1,8 @@
+[package]
+name = "spacefort"
+version = "0.1.0"
+authors = ["rusch <rusch@mit.edu>"]
+
+[dependencies]
+ncurses = "5.84.0"
+regex = "0.1.41"
