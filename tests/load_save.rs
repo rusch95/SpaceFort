@@ -1,3 +1,4 @@
+
 extern crate ncurses;
 mod io;
 mod map;
@@ -11,5 +12,3 @@ fn main()
     let load_map = load_map(".unit_test.sfm").expect("Map load failure");
     assert!(save_map == load_map);
 }
-
-
