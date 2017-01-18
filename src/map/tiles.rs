@@ -3,6 +3,8 @@ use std::io::{Read, Write, BufWriter, Error};
 
 use io::term::{TermHandle};
 
+//TODO Clean up unwraps
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Tile {
     //Single map unit
@@ -36,7 +38,10 @@ impl Map {
         for z in 0..self.zlen {
             for y in 0..self.ylen {
                 for x in 0..self.xlen {
-                    print!("{0}", self.get_tile(x, y, z).unwrap().material % 10);
+                    match self.get_tile(x, y, z) {
+                        Some(tile) => print!("{0}", tile.material % 10),
+                        None       => print!(" "),
+                    }
                 }
                 print!("\n");
             }
@@ -65,7 +70,8 @@ impl Map {
         for z in 0..self.zlen {
             for y in 0..self.ylen {
                 for x in 0..self.xlen {
-                    try!(write!(&mut writer, "{} ", self.get_tile(x, y, z).unwrap().material));
+                    try!(write!(&mut writer, "{} ", 
+                                self.get_tile(x, y, z).expect("Malformed map").material));
                 }
                 try!(write!(&mut writer, "\n"));
             }
@@ -95,7 +101,7 @@ pub fn handle_to_snapshot(handle: &TermHandle, map: &Map) -> MapSnapshot {
     //Uses handle and map to generate 2D snapshot
     //Eventually 3D snapshots may be enabled
     //Base interface method between rendering engine and map
-    let mut tiles = Vec::new();
+    let mut tiles = Vec::with_capacity((handle.xlen * handle.ylen) as usize);
     for y in handle.y..handle.y + handle.ylen {
         for x in handle.x..handle.x + handle.xlen {
             match map.get_tile(x, y, handle.z) {
