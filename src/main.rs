@@ -2,14 +2,20 @@ extern crate ncurses;
 mod io;
 mod map;
 
-use map::tiles::*;
+use io::term::init_term;
+use map::tiles::load_map;
 
-fn main()
+#[allow(unused_mut)]
+fn main() 
 {
-    let save_map = test_map();
-    save_map.save(".unit_test.sfm").expect("Map save failure");
-    let load_map = load_map(".unit_test.sfm").expect("Map load failure");
-    assert!(save_map == load_map);
+    let test_path = "/home/rusch/Projects/SpaceFort/static/maps/test_map.sfm" ;
+    let mut term_handle = init_term();
+    let mut map = load_map(test_path).expect("Could not load map");
+
+    loop {
+        term_handle.update_display(&map);
+        if !term_handle.get_input() {
+            break;
+        }
+    }
 }
-
-
