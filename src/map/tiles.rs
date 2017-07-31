@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{Read, Write, BufWriter, Error};
 
-use io::term::{TermHandle};
+use io::base::CameraHandle;
 
 //TODO Clean up unwraps
 
@@ -97,7 +97,7 @@ impl MapSnapshot {
     }
 }
 
-pub fn handle_to_snapshot(handle: &TermHandle, map: &Map) -> MapSnapshot {
+pub fn handle_to_snapshot(handle: &CameraHandle, map: &Map) -> MapSnapshot {
     //Uses handle and map to generate 2D snapshot
     //Eventually 3D snapshots may be enabled
     //Base interface method between rendering engine and map

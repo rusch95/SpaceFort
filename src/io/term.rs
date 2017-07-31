@@ -1,19 +1,11 @@
 extern crate ncurses;
 
 use ncurses::*;
+use io::base::CameraHandle;
 use map::tiles::{Map, MapSnapshot, Tile, handle_to_snapshot};
 
-pub struct TermHandle {
-    //Representation of the player's camera
-    pub xlen: i32,
-    pub ylen: i32,
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
-}
-
-pub fn init_term() -> TermHandle {
-    //Initialize ncurses terminal and setup Terminal Handle
+pub fn init_term() -> CameraHandle {
+    //Initialize ncurses terminal and setup Camera Handle
     initscr();
     raw();
 
@@ -25,7 +17,7 @@ pub fn init_term() -> TermHandle {
     //Set getch to be non-blocking
     timeout(0);
 
-    TermHandle {xlen: 60, ylen: 30, x: 0, y: 0, z: 0}
+    CameraHandle {xlen: 60, ylen: 30, x: 0, y: 0, z: 0}
 }
 
 pub fn end_term() {
@@ -35,7 +27,7 @@ pub fn end_term() {
     endwin();
 }
 
-impl TermHandle {
+impl CameraHandle {
 
     pub fn update_display(&self, map: &Map) {
         //Update screen based off changes to map, creatures, and such
@@ -64,7 +56,7 @@ impl TermHandle {
     }
 
     pub fn get_input(&mut self) -> bool {
-        //Get keyboard input, updating TermHandle, and changing map as necessary
+        //Get keyboard input, updating CameraHandle, and changing map as necessary
         //TODO Enable key bindings
         //TODO Allow char instead of raw ascii 
 		let ch = getch();
@@ -86,7 +78,7 @@ impl TermHandle {
         }
 
         //Debuging info
-        mvprintw(50, 5, &format!("TermHandle x:{}, y:{}, z:{}", self.x, self.y, self.z));
+        mvprintw(50, 5, &format!("CameraHandle x:{}, y:{}, z:{}", self.x, self.y, self.z));
 
         true
     }
