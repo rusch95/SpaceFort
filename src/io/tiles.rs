@@ -1,6 +1,11 @@
+extern crate piston;
+extern crate graphics;
+extern crate glutin_window;
+extern crate opengl_graphics;
+
 use std::sync::{RwLock, Arc};
 use io::base::CameraHandle;
-use map::tiles::{Map, MapSnapshot, Tile, handle_to_snapshot};
+use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
@@ -13,7 +18,6 @@ pub struct App {
     gl: GlGraphics,
     ch: CameraHandle,
     map: Arc<RwLock<Map>>,
-    pos: (f64, f64)
 }
 
 
@@ -26,7 +30,6 @@ impl App {
         const BLUE:  [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
         let square = rectangle::square(0.0, 0.0, 20.0);
-        let (x, y) = self.pos;
 
         let snap = self.get_snap();
 
@@ -75,23 +78,10 @@ pub fn init_graphics(map: Arc<RwLock<Map>>) {
         gl: GlGraphics::new(opengl),
         ch: CameraHandle {xlen: 30, ylen: 30, x: 0, y: 0, z: 0},
         map: map,
-        pos: (0.0, 0.0)
     };
-
-    let mut cursor = (0.0, 0.0);
 
     let mut events = Events::new(EventSettings::new()).lazy(true);
     while let Some(e) = events.next(&mut window) {
-
-        e.mouse_cursor(|x, y| {
-            cursor = (x, y);
-            println!("Mouse moved '{} {}'", x, y);
-        });
-
-        if let Some(Button::Mouse(button)) = e.press_args() {
-            println!("Pressed mouse button '{:?}'", button);
-            app.pos = cursor;
-        }
 
         if let Some(Button::Keyboard(key)) = e.press_args() {
             match key {
@@ -108,17 +98,5 @@ pub fn init_graphics(map: Arc<RwLock<Map>>) {
         if let Some(r) = e.render_args() {
             app.render(&r);
         }
-
-        if let Some(u) = e.update_args() {
-            app.update(&u);
-        }
-    }
-}
-
-impl CameraHandle {
-
-    pub fn update_display(&self, map: &Map) {
-        //Update screen based off changes to map, creatures, and such
-        let snap = handle_to_snapshot(self, map);
     }
 }

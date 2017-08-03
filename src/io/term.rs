@@ -1,8 +1,20 @@
 extern crate ncurses;
 
 use ncurses::*;
+use std::sync::{RwLock, Arc};
 use io::base::CameraHandle;
 use map::tiles::{Map, MapSnapshot, Tile, handle_to_snapshot};
+
+
+pub fn init_graphics(map: Arc<RwLock<Map>>) {
+    let handle = init_term();
+    loop {
+        term_handle.update_display(&map);
+        if !term_handle.get_input() {
+            break;
+        }
+    }
+    end_term();
 
 pub fn init_term() -> CameraHandle {
     //Initialize ncurses terminal and setup Camera Handle
@@ -29,9 +41,9 @@ pub fn end_term() {
 
 impl CameraHandle {
 
-    pub fn update_display(&self, map: &Map) {
+    pub fn update_display(&self, map: Arc<RwLock<Map>>) {
         //Update screen based off changes to map, creatures, and such
-        let snap = handle_to_snapshot(self, map);
+        let snap = handle_to_snapshot(self, map.read().unwrap());
         for y in 0..snap.ylen {
             for x in 0..snap.xlen {
                 let index = (x + y * snap.xlen) as usize;
