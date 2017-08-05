@@ -1,20 +1,27 @@
-use std::sync::{RwLock, Arc};
-use std::{thread, time};
-use io::base::CameraHandle;
-use map::tiles::Map;
+use entities::interact::{Action, Actions, ActionType};
 
-// use entities::interact::Action;
+pub type Pos = (i32, i32, i32);
+pub type Ticks = i32;
 
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Entity {
-    pos: (u16, u16),
-    // actions: Vec<Action>,
+    pub pos: Pos,
+    pub actions: Actions,
 }
 
- 
-pub fn init_entities(map: Arc<RwLock<Map>>) {
+pub type Entities = Vec<Entity>;
 
-    thread::spawn(move || {
-        loop {
-        }
-    });
+pub fn init_entities() -> Entities {
+
+    let mut entities = Entities::new();
+
+    let mut actions = Actions::new();
+    for i in 0..30 {
+        actions.push_back(Action { atype: ActionType::Move((i, i, 0)), duration: 20 });
+    }
+
+    entities.push(
+        Entity { pos: (0, 0, 0), 
+                 actions: actions });
+    entities
 }

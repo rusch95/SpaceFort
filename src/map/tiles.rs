@@ -3,6 +3,10 @@ use std::io::{Read, Write, BufWriter, Error};
 
 use io::base::CameraHandle;
 
+type Tiles = Vec<Tile>;
+
+const AIR_TILE: u16 = 60000;
+
 //TODO Clean up unwraps
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -14,7 +18,7 @@ pub struct Tile {
 #[derive(Clone, Eq, PartialEq)]
 pub struct Map {
     //Holds the terrain info as a vector of tiles
-    tiles: Vec<Tile>, 
+    tiles: Tiles, 
     xlen: i32,
     ylen: i32,
     zlen: i32,
@@ -24,7 +28,7 @@ pub struct Map {
 pub struct MapSnapshot {
     //Represents a slice of the map 
     //to be be delivered to the rendering engine
-    pub tiles: Vec<Tile>,
+    pub tiles: Tiles,
     pub xlen: i32,
     pub ylen: i32,
     //entities: Vec<Entities>
@@ -117,7 +121,7 @@ pub fn handle_to_snapshot(handle: &CameraHandle, map: &Map) -> MapSnapshot {
 
 fn air_tile() -> Tile {
     //Generate empty tile for filling error space
-    Tile {material: 60000}
+    Tile {material: AIR_TILE}
 }
 
 #[allow(dead_code)]
@@ -153,4 +157,3 @@ pub fn load_map(path: &str) -> Result<Map, Error> {
 
     Ok(Map {tiles: tiles, xlen: x, ylen: y, zlen: z})
 }
-
