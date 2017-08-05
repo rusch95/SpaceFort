@@ -4,6 +4,8 @@ extern crate glutin_window;
 extern crate opengl_graphics;
 extern crate pathfinding;
 
+use std::rc::Rc;
+use std::path::Path;
 use io::base::CameraHandle;
 use io::colors::*;
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
@@ -26,7 +28,7 @@ const Y_PIXELS: f64 = (Y_WIN_SIZE / (Y_NUM_TILES as u32)) as f64;
 
 type WinPos = (f64, f64);
 
-pub struct App {
+pub struct Game {
     gl: GlGraphics,
     ch: CameraHandle,
     map: Map,
@@ -35,7 +37,7 @@ pub struct App {
 }
 
 
-impl App {
+impl Game {
     fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
 
@@ -135,13 +137,16 @@ pub fn init_graphics(map: Map, entities: Entities) {
         .build()
         .unwrap();
 
-    let mut app = App {
+    let mut game = Game {
         gl: GlGraphics::new(opengl),
         ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 0},
         map: map,
         entities: entities,
         ticks: 0,
     };
+
+    let assets = Path::new(env!("CARGO_MANIFEST_DIR"))
+                 .join("static/inc/assets");
 
     let mut cur_pos: WinPos = (0.0, 0.0);
 
@@ -150,10 +155,10 @@ pub fn init_graphics(map: Map, entities: Entities) {
 
         if let Some(Button::Keyboard(key)) = e.press_args() {
             match key {
-                Key::Right => app.ch.x += 1,
-                Key::Left  => app.ch.x -= 1,
-                Key::Down  => app.ch.y += 1,
-                Key::Up    => app.ch.y -= 1,
+                Key::Right => game.ch.x += 1,
+                Key::Left  => game.ch.x -= 1,
+                Key::Down  => game.ch.y += 1,
+                Key::Up    => game.ch.y -= 1,
                 Key::Q     => break,
                 _          => {},
             }
@@ -165,18 +170,18 @@ pub fn init_graphics(map: Map, entities: Entities) {
 
         if let Some(button) = e.press_args() {
             if button == Button::Mouse(MouseButton::Left) {
-                let tile_pos = app.win_pos_to_tile(cur_pos);
-                let ref mut ent = &mut app.entities[0];
-                path_to(&app.map, ent, tile_pos);
+                let tile_pos = game.win_pos_to_tile(cur_pos);
+                let ref mut ent = &mut game.entities[0];
+                path_to(&game.map, ent, tile_pos);
             }
         }
 
         if let Some(r) = e.render_args() {
-            app.render(&r);
+            game.render(&r);
         }
 
         if let Some(u) = e.update_args() {
-            app.update(&u);
+            game.update(&u);
         }
     }
 }
