@@ -1,11 +1,11 @@
 use std::fs::File;
+use std::path::Path;
 use std::io::{Read, Write, BufWriter, Error};
 
 use io::base::CameraHandle;
+use map::constants::*;
 
 type Tiles = Vec<Tile>;
-
-const AIR_TILE: u16 = 60000;
 
 //TODO Clean up unwraps
 
@@ -31,7 +31,6 @@ pub struct MapSnapshot {
     pub tiles: Tiles,
     pub xlen: i32,
     pub ylen: i32,
-    //entities: Vec<Entities>
 }
 
 impl Map {
@@ -112,16 +111,11 @@ pub fn handle_to_snapshot(handle: &CameraHandle, map: &Map) -> MapSnapshot {
                 //Get_tile returns valid tile
                 Some(tile) => tiles.push(tile),
                 //Otherwise display as air
-                None       => tiles.push(air_tile()),
+                None       => tiles.push(AIR_TILE),
             }
         }
     }
     MapSnapshot {tiles: tiles, xlen: handle.xlen, ylen: handle.ylen}
-}
-
-fn air_tile() -> Tile {
-    //Generate empty tile for filling error space
-    Tile {material: AIR_TILE}
 }
 
 #[allow(dead_code)]
@@ -132,7 +126,15 @@ pub fn test_map() -> Map {
     Map {tiles: vec![def_tile; 400000], xlen: 200, ylen: 200, zlen: 5}
 }
 
-pub fn load_map(path: &str) -> Result<Map, Error> {
+pub fn init_map(root: &Path) -> Map {
+    let test_path = root.join("static/inc/maps/smol_map.sfm");
+    let path_str = test_path
+                   .to_str()
+                   .expect("Unicode decode error");
+    load_map(path_str).expect("Could not load map")
+}
+
+fn load_map(path: &str) -> Result<Map, Error> {
     //Load map from file. Currently unversioned so take heed.
     //Map validation is not performed.
     let mut f = try!(File::open(&path));

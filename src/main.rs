@@ -14,19 +14,15 @@ extern crate pathfinding;
 use std::path::Path;
 
 use io::tiles::init_graphics;
-use map::tiles::load_map;
+use map::tiles::init_map;
 use entities::entity::init_entities;
 
 
 fn main() 
-{
-    let test_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("static/inc/maps/smol_map.sfm");
-    let path_str = test_path
-                   .to_str()
-                   .expect("Unicode decode error");
-    let map = load_map(path_str).expect("Could not load map");
+{   
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
 
+    let map = init_map(root);
     let entities = init_entities();
 
     init_graphics(map, entities);

@@ -1,0 +1,16 @@
+[default]
+id = 0
+texture = ""
+color = [255,255,255,255]
+
+[dwarf]
+id = 1
+color = [240,30,30,255]
+
+[dog]
+id = 2
+color = [30,240,30,255]
+
+[troll]
+id = 3
+color = [30,30,240,255]

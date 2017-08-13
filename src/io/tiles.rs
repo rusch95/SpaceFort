@@ -8,6 +8,7 @@ use std::rc::Rc;
 use std::path::Path;
 use io::base::CameraHandle;
 use io::colors::*;
+use map::constants::*;
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
 use entities::entity::{Entity, Entities, Pos, Ticks};
 use entities::interact::{Action, Actions, ActionType};
@@ -60,7 +61,7 @@ impl Game {
                     let xpos = X_PIXELS * (x as f64);
                     let ypos = Y_PIXELS * (y as f64);
                     let transform = c.transform.trans(xpos, ypos);
-                    let color = match tile.material {1 => BLUE, 60000 => BLACK, _ => RED};
+                    let color = match tile.material {1 => BLUE, AIR_MAT => BLACK, _ => RED};
                     rectangle(color, square, transform, gl);
                 }
             }
@@ -159,6 +160,8 @@ pub fn init_graphics(map: Map, entities: Entities) {
                 Key::Left  => game.ch.x -= 1,
                 Key::Down  => game.ch.y += 1,
                 Key::Up    => game.ch.y -= 1,
+                Key::O     => game.ch.z += 1,
+                Key::P     => game.ch.z -= 1,
                 Key::Q     => break,
                 _          => {},
             }

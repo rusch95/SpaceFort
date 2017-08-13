@@ -1,0 +1,38 @@
+# Materials file
+[default]
+id = 0
+color = [255,255,255,255]
+texture = ""
+diggable = false
+
+[air]
+id = 1
+color = [54,116,216,255]
+
+[stone]
+id = 2
+color = [114,126,145,255]
+diggable = true
+
+[dirt]
+id = 3
+color = [96,78,31,255]
+diggable = true
+
+[sand]
+id = 4
+color = [224,221,161,255]
+diggable = true
+
+[grass]
+id = 5
+color = [25,165,18,255]
+diggable = true
+
+[downstairs]
+id = 9
+color = [100,100,100,255]
+
+[upstairs]
+id = 8
+color = [100,100,100,255]
