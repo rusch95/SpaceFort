@@ -23,6 +23,26 @@ pub fn path_to(map: &Map, ent: &mut Entity, pos: Pos) {
     ent.actions = actions;
 }
 
+pub fn path_next_to(map: &Map, ent: &Entity, end_pos: Pos) -> Actions {
+    let mut actions = Actions::new();
+    let (x, y, z) = end_pos;
+    let path = bfs(&ent.pos,
+                   |&p| succ(&map, &p),
+                   |&p| succ(&map, &end_pos).contains(&p)
+                  );
+    match path {
+        Some(path) => {
+            for coord in path {
+                actions.push_back(Action { atype: ActionType::Move(coord),
+                                           duration: 20 });  // TODO Swap out for ent speed
+            }
+        },
+        None => (),
+    }
+
+    actions
+}
+
 // TODO Rewrite using filter
 fn succ(map: &Map, pos: &Pos) -> Vec<Pos> {
     let (x, y, z) = *pos;

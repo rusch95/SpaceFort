@@ -2,6 +2,7 @@ use std::fs::File;
 use std::path::Path;
 use std::io::{Read, Write, BufWriter, Error};
 
+use entities::entity::Pos;
 use io::base::CameraHandle;
 use map::constants::*;
 
@@ -59,6 +60,16 @@ impl Map {
         } else {
             let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
             Some(self.tiles[index])
+        }
+    }
+
+    pub fn dig(&mut self, pos: Pos) {
+        let (x, y, z) = pos;
+        if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
+            ()
+        } else {
+            let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
+            self.tiles[index].material = 0;
         }
     }
 

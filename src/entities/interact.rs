@@ -1,9 +1,8 @@
 use std::collections::VecDeque;
 use std::cmp::{min, max};
+use map::tiles::Map;
 use entities::entity::{Entities, EntIds, Pos, Ticks};
-use io::tiles::{TilesSelector};
-
-pub type Actions = VecDeque<Action>;
+use io::tiles::{TilesSelector, Id};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Action {
@@ -14,8 +13,25 @@ pub struct Action {
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ActionType {
     Move(Pos),
-    Wait
+    Dig(Pos),
+    Attack(Id),
+    Wait,
 }
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub struct Task {
+    pub atype: ActionType,
+    pub owner: Option<Id>,
+}
+
+impl Task {
+    fn dig(pos: Pos) -> Task {
+        Task { atype: ActionType::Dig(pos), owner: None }
+    }
+}
+
+pub type Actions = VecDeque<Action>;
+pub type Tasks = Vec<Task>;
 
 pub fn select_entities(ents: &Entities, selector: TilesSelector) -> EntIds {
     let (s1, s2) = rotate_selector(selector);
@@ -26,8 +42,24 @@ pub fn select_entities(ents: &Entities, selector: TilesSelector) -> EntIds {
             ent_ids.push(ent.id);
         }
     }
-    println!("{:?}", ent_ids);
     ent_ids
+}
+
+pub fn add_dig_tasks(tasks: &mut Tasks, map: &Map, selector: TilesSelector) {
+    let ((x1, y1, z1), (x2, y2, z2)) = rotate_selector(selector);
+
+    // TODO Fix double dig
+    for x in x1..(x2 + 1) {
+        for y in y1..(y2 + 1) {
+            for z in z1..(z2 + 1) {
+                if let Some(tile) = map.get_tile(x, y, z) {
+                    if tile.material == 1 {
+                        tasks.push(Task::dig((x, y, z)));
+                    }
+                }
+            }
+        }
+    }
 }
 
 // Make top left corner first element and bottom left corner second element
