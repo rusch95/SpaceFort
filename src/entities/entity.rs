@@ -25,14 +25,9 @@ pub fn init_entities() -> Entities {
 
     let mut entities = Entities::new();
 
-    let mut actions = Actions::new();
-    for i in 0..30 {
-        actions.push_back(Action { atype: ActionType::Move((i, i, 0)), duration: 20 });
-    }
+    let mut entity = Entity::new(0, (0, 0, 1));
+    let entity2 = Entity::new(1, (5, 5, 1));
 
-    let mut entity = Entity::new(0, (0, 0, 0));
-    let entity2 = Entity::new(1, (5, 5, 0));
-    entity.actions = actions;
     entities.push(entity);
     entities.push(entity2);
         

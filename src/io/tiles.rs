@@ -173,7 +173,7 @@ pub fn init_graphics(map: Map, entities: Entities) {
 
     let mut game = Game {
         gl: GlGraphics::new(opengl),
-        ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 0},
+        ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
         map: map,
         entities: entities,
         selected_entities: Vec::new(),
