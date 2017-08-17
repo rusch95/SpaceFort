@@ -4,15 +4,13 @@ Dig holes
     Select terrain to be dug
     Dynamically assign tasks
 Proper multilevel support
-    Path correctly
-    Up and Down move fine
     Ramps
     Render opacity
 Click to select and drag to select
 Group movement and occlusion
 Textures
+Astar - Diagonal movement is weird
 
 =Nice to have=
-Astar
 Liquids
 Clouds

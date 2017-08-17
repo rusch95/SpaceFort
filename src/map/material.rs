@@ -1,3 +1,4 @@
+use std::path::Path;
 use map::constants::*;
 
 type MaterialID = u16;
@@ -11,5 +12,6 @@ pub struct Material {
     pub color: [f32; 4],
 }
 
-pub fn init_materials() {
+pub fn init_materials(root: &Path) {
+    
 }

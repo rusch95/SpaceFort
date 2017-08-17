@@ -4,14 +4,13 @@ extern crate glutin_window;
 extern crate opengl_graphics;
 extern crate pathfinding;
 
-use std::rc::Rc;
 use std::path::Path;
 use io::base::CameraHandle;
 use io::colors::*;
 use map::constants::*;
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
-use entities::entity::{Entity, Entities, Pos, Ticks};
-use entities::interact::{Action, Actions, ActionType};
+use entities::entity::{Entities, EntId, Pos, Ticks};
+use entities::interact::{Action, Actions, ActionType, select_entities};
 use entities::pathfind::path_to;
 
 use piston::window::WindowSettings;
@@ -27,13 +26,17 @@ const Y_NUM_TILES: i32 = 35;
 const X_PIXELS: f64 = (X_WIN_SIZE / (X_NUM_TILES as u32)) as f64;
 const Y_PIXELS: f64 = (Y_WIN_SIZE / (Y_NUM_TILES as u32)) as f64;
 
-type WinPos = (f64, f64);
+pub type WinPos = (f64, f64);
+pub type Selector = (WinPos, WinPos);
+pub type TilesSelector = (Pos, Pos);
 
 pub struct Game {
     gl: GlGraphics,
     ch: CameraHandle,
     map: Map,
     entities: Entities,
+    selected_entities: Vec<EntId>,
+    selector: Option<Selector>,
     ticks: Ticks,
 }
 
@@ -48,6 +51,8 @@ impl Game {
 
         let entities = &self.entities;
         let ch = &self.ch;
+
+        let selector = self.selector;
 
         self.gl.draw(args.viewport(), |c, gl| {
             // Clear the screen.
@@ -72,11 +77,16 @@ impl Game {
                 if z == ch.z &&
                        (ch.x <= x) && (x <= ch.xlen) &&
                        (ch.y <= y) && (y <= ch.ylen) {
-                    let xpos = X_PIXELS * ((x - ch.x) as f64);
-                    let ypos = Y_PIXELS * ((y - ch.y) as f64);
-                    let transform = c.transform.trans(xpos, ypos);
+                    let (winx, winy) = tile_pos_to_win(entity.pos, &ch);
+                    let transform = c.transform.trans(winx, winy);
                     rectangle(YELLOW, square, transform, gl);
                 }
+            }
+
+            // Draw selector
+            if let Some(((x1, y1), (x2, y2))) = selector {
+                let selector_rect = [x1, y1, x2 - x1, y2 - y1];
+                rectangle(SELECTOR_COLOR, selector_rect, c.transform, gl);
             }
         });
     }
@@ -96,14 +106,11 @@ impl Game {
                     if act.duration > 0 {act.duration -= 1; false}
                     else {
                         match act.atype {
-
                             ActionType::Move(pos) => {
                                 ent.pos = pos;
                             },
-
                             ActionType::Wait => {},
                         };
-
                         true
                     }
                 }
@@ -114,17 +121,43 @@ impl Game {
         };
     }
 
-    fn win_pos_to_tile(&self, pos: WinPos) -> Pos {
-        let (x, y) = pos;
-        ((x / X_PIXELS) as i32, 
-         (y / Y_PIXELS) as i32, 
-          self.ch.z)
+    fn move_selected_entities(&mut self, cur_pos: WinPos) {
+        let dest_tile_pos = win_pos_to_tile(cur_pos, &self.ch);
+
+        for ref mut ent in &mut self.entities {
+            for ent_id in &self.selected_entities {
+                if ent.id == *ent_id {
+                    path_to(&self.map, ent, dest_tile_pos);
+                }
+            }
+        }
+
+        self.selected_entities.clear();
     }
 
     fn get_snap(&mut self) -> MapSnapshot {
         handle_to_snapshot(&self.ch, &self.map)
     }
 }
+
+pub fn win_pos_to_tile(win_pos: WinPos, ch: &CameraHandle) -> Pos {
+    let (x, y) = win_pos;
+    ((x / X_PIXELS) as i32 + ch.x, 
+     (y / Y_PIXELS) as i32 + ch.y, 
+      ch.z)
+}
+
+pub fn tile_pos_to_win(pos: Pos, ch: &CameraHandle) -> WinPos {
+    let (x, y, _) = pos;
+    ((x - ch.x) as f64 * X_PIXELS,
+     (y - ch.y) as f64 * Y_PIXELS)
+}
+
+pub fn win_to_tile_selector(selector: Selector, ch: &CameraHandle) -> TilesSelector {
+    let (win_pos1, win_pos2) = selector;
+    (win_pos_to_tile(win_pos1, &ch), win_pos_to_tile(win_pos2, &ch))
+}
+
 
 pub fn init_graphics(map: Map, entities: Entities) {
     let opengl = OpenGL::V3_2;
@@ -143,6 +176,8 @@ pub fn init_graphics(map: Map, entities: Entities) {
         ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 0},
         map: map,
         entities: entities,
+        selected_entities: Vec::new(),
+        selector: None,
         ticks: 0,
     };
 
@@ -150,6 +185,7 @@ pub fn init_graphics(map: Map, entities: Entities) {
                  .join("static/inc/assets");
 
     let mut cur_pos: WinPos = (0.0, 0.0);
+    let mut selector_start: Option<WinPos> = None;
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
@@ -162,20 +198,37 @@ pub fn init_graphics(map: Map, entities: Entities) {
                 Key::Up    => game.ch.y -= 1,
                 Key::O     => game.ch.z += 1,
                 Key::P     => game.ch.z -= 1,
+                Key::Y     => {
+                    game.move_selected_entities(cur_pos);
+                },
                 Key::Q     => break,
                 _          => {},
             }
         };
 
         if let Some(pos) = e.mouse_cursor_args() {
-            cur_pos = (pos[0], pos[1]);
+            cur_pos = (pos[0], pos[1] + 43.0);
+
+            if let Some(selector_pos) = selector_start {
+                game.selector = Some((selector_pos, cur_pos));
+            }
         }
 
         if let Some(button) = e.press_args() {
             if button == Button::Mouse(MouseButton::Left) {
-                let tile_pos = game.win_pos_to_tile(cur_pos);
-                let ref mut ent = &mut game.entities[0];
-                path_to(&game.map, ent, tile_pos);
+                selector_start = Some(cur_pos);
+                game.selector = Some((cur_pos, cur_pos))
+            }
+        }
+
+        if let Some(button) = e.release_args() {
+            if button == Button::Mouse(MouseButton::Left) {
+                if let Some(selector) = game.selector {   
+                    let tiles_selector = win_to_tile_selector(selector, &game.ch);
+                    game.selected_entities = select_entities(&game.entities, tiles_selector);
+                    selector_start = None;
+                    game.selector = None;
+                }
             }
         }
 
@@ -188,4 +241,3 @@ pub fn init_graphics(map: Map, entities: Entities) {
         }
     }
 }
-
