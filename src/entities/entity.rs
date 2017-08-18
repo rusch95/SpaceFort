@@ -12,12 +12,17 @@ pub struct Entity {
     pub id: Id,
     pub pos: Pos,
     pub actions: Actions,
+    pub movement_speed: Ticks,
     pub goal: Option<ActionType>,
 }
 
 impl Entity {
     fn new(id: Id, pos: Pos) -> Entity {
-        Entity { id: id, pos: pos, actions: Actions::new(), goal: None }
+        Entity { id: id, 
+                pos: pos, 
+                movement_speed: 20,
+                actions: Actions::new(), 
+                goal: None }
     }
 }
         

@@ -1,11 +1,5 @@
 =Vital=
 Attack and die
-Dig holes
-    Select terrain to be dug
-    Dynamically assign tasks
-Proper multilevel support
-    Ramps
-    Render opacity
 Group movement and occlusion
 Textures
 Astar - Diagonal movement is weird
@@ -13,3 +7,5 @@ Astar - Diagonal movement is weird
 =Nice to have=
 Liquids
 Clouds
+Proper multilevel support
+    Render opacity

@@ -2,19 +2,20 @@ use map::tiles::Map;
 use entities::interact::{Action, Actions, ActionType};
 use entities::entity::{Entity, Pos};
 
-use pathfinding::bfs;
+use pathfinding::{bfs, fringe};
 
 pub fn path_to(map: &Map, ent: &mut Entity, pos: Pos) {
     let mut actions = Actions::new();
-    let path = bfs(&ent.pos,
-                   |&(x, y, z)| succ(&map, &(x, y, z)),
-                   |&p| p == pos
-                  );
+    let path = fringe(&ent.pos,
+                      |&p| succ(&map, &p),
+                      |&p| dist(&p, &pos),
+                      |&p| p == pos
+                     );
     match path {
         Some(path) => {
             for coord in path {
                 actions.push_back(Action { atype: ActionType::Move(coord),
-                                           duration: 20 });
+                                           duration: ent.movement_speed });
             }
         },
         None => (),
@@ -23,18 +24,10 @@ pub fn path_to(map: &Map, ent: &mut Entity, pos: Pos) {
     ent.actions = actions;
 }
 
-pub fn path_next_to(map: &Map, ent: &Entity, end_pos: Pos) -> Actions {
-    let mut actions = Actions::new();
-    let (x, y, z) = end_pos;
-    let path = bfs(&ent.pos,
-                   |&p| succ(&map, &p),
-                   |&p| succ(&map, &end_pos).contains(&p)
-                  );
-    match path {
-        Some(path) => {
+            let (path, cost) = path;
             for coord in path {
                 actions.push_back(Action { atype: ActionType::Move(coord),
-                                           duration: 20 });  // TODO Swap out for ent speed
+                                           duration: ent.movement_speed });  // TODO Swap out for ent speed
             }
         },
         None => (),
@@ -43,34 +36,37 @@ pub fn path_next_to(map: &Map, ent: &Entity, end_pos: Pos) -> Actions {
     actions
 }
 
+const SQRT2: f64 = 1.41;
+
 // TODO Rewrite using filter
-fn succ(map: &Map, pos: &Pos) -> Vec<Pos> {
+fn succ(map: &Map, pos: &Pos) -> Vec<(Pos, f64)> {
     let (x, y, z) = *pos;
 
     // TODO Make this a const instead
     let mut poss = Vec::new();
     for i in [-1, 0, 1].iter() {
         for j in [-1, 0, 1].iter() {
-            poss.push((x + i, y + j, z));
+            let cost = {if i == 0 or j == 0 {1.0} else {SQRT2}};
+            poss.push(((x + i, y + j, z), cost));
         }
     };
 
     let mut vec = Vec::new();
-    for (i, j, k) in poss {
+    for ((i, j, k), cost) in poss {
         // 2d movement
         if let Some(tile) = map.get_tile(i, j, k) {
             match tile.material {
-                0 => vec.push((i, j, k)),
-                8 => vec.push((i, j, k)),
-                9 => vec.push((i, j, k)),
+                0 => vec.push(((i, j, k), cost)),
+                8 => vec.push(((i, j, k), cost)),
+                9 => vec.push(((i, j, k), cost)),
                 _ => (),
             }
         }
         // Up and down
         if let Some(tile) = map.get_tile(x, y, z) {
             match tile.material {
-                8 => vec.push((x, y, z - 1)),
-                9 => vec.push((x, y, z + 1)),
+                8 => vec.push(((x, y, z - 1), 1.0)),
+                9 => vec.push(((x, y, z + 1), 1.0)),
                 _ => (),
             }
         }
