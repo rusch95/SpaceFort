@@ -6,46 +6,25 @@ use pathfinding::fringe;
 
 // TODO Fix distances to use f64 instead of int
 
-fn dist(pos1: &Pos, pos2: &Pos) -> i32 {
-    let (x1, y1, z1) = *pos1;
-    let (x2, y2, z2) = *pos2;
-    let sqr_dist = (x1 - x2).pow(2) + (y1 - y2).pow(2) + (z1 - z2).pow(2);
-    (sqr_dist as f64).sqrt() as i32
-}
-
 pub fn path_to(map: &Map, ent: &mut Entity, end_pos: Pos) -> Actions {
-    let mut actions = Actions::new();
-    let path = fringe(&ent.pos,
-                      |&p| succ(&map, &p),
-                      |&p| dist(&p, &end_pos),
-                      |&p| p == end_pos
-                     );
-    match path {
-        Some(path) => {
-            let (path, cost) = path;
-            for coord in path {
-                actions.push_back(
-                    Action { atype: ActionType::Move(coord),
-                             duration: ent.movement_speed }
-                );
-            }
-        },
-        None => (),
-    }
-
-    actions
+    path(map, ent, end_pos, |&p| p == end_pos)
 }
 
 pub fn path_next_to(map: &Map, ent: &Entity, end_pos: Pos) -> Actions {
+    path(map, ent, end_pos,
+         |&p| {let sucs = succ(&map, &end_pos);
+               sucs.contains(&(p, UNIT_DIST)) || 
+               sucs.contains(&(p, DIAG_DIST))})
+}
+
+pub fn path<F>(map: &Map, ent: &Entity, end_pos: Pos, end_det: F) -> Actions where 
+    F: Fn(&Pos) -> bool {    
+
     let mut actions = Actions::new();
     let path = fringe(&ent.pos,
                       |&p| succ(&map, &p),
                       |&p| dist(&p, &end_pos),
-                      |&p| {let sucs = succ(&map, &end_pos);
-                                sucs.contains(&(p, UNIT_DIST)) || 
-                                sucs.contains(&(p, DIAG_DIST))
-                           }
-                     );
+                      end_det);
     match path {
         Some(path) => {
             let (path, cost) = path;
@@ -64,6 +43,13 @@ pub fn path_next_to(map: &Map, ent: &Entity, end_pos: Pos) -> Actions {
 
 const UNIT_DIST: i32 = 100;
 const DIAG_DIST: i32 = (UNIT_DIST as f64 * 1.414) as i32;
+
+fn dist(pos1: &Pos, pos2: &Pos) -> i32 {
+    let (x1, y1, z1) = *pos1;
+    let (x2, y2, z2) = *pos2;
+    let sqr_dist = (x1 - x2).pow(2) + (y1 - y2).pow(2) + (z1 - z2).pow(2);
+    (sqr_dist as f64).sqrt() as i32
+}
 
 // TODO Rewrite using filter
 fn succ(map: &Map, pos: &Pos) -> Vec<(Pos, i32)> {
