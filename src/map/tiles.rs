@@ -5,6 +5,7 @@ use std::io::{Read, Write, BufWriter, Error};
 use entities::entity::Pos;
 use io::base::CameraHandle;
 use map::constants::*;
+use map::material::{init_materials, Materials};
 
 type Tiles = Vec<Tile>;
 type Material = u16;
@@ -26,10 +27,11 @@ impl Tile {
 }
 
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Map {
     //Holds the terrain info as a vector of tiles
     tiles: Tiles, 
+    materials: Materials,
     xlen: i32,
     ylen: i32,
     zlen: i32,
@@ -163,23 +165,19 @@ pub fn handle_to_snapshot(handle: &CameraHandle, map: &Map) -> MapSnapshot {
     MapSnapshot {tiles: tiles, xlen: handle.xlen, ylen: handle.ylen}
 }
 
-#[allow(dead_code)]
-pub fn test_map() -> Map {
-    //Generate test map of a single material
-    //[debug] func
-    let default_tile = Tile::new(0);
-    Map {tiles: vec![default_tile; 400000], xlen: 200, ylen: 200, zlen: 5}
-}
-
 pub fn init_map(root: &Path) -> Map {
     let test_path = root.join("static/inc/maps/smol_map.sfm");
     let path_str = test_path
                    .to_str()
                    .expect("Unicode decode error");
-    load_map(path_str).expect("Could not load map")
+
+    // Load materials properties file
+    let materials = init_materials(root);
+
+    load_map(path_str, materials).expect("Could not load map")
 }
 
-fn load_map(path: &str) -> Result<Map, Error> {
+fn load_map(path: &str, materials: Materials) -> Result<Map, Error> {
     //Load map from file. Currently unversioned so take heed.
     //Map validation is not performed.
     let mut f = try!(File::open(&path));
@@ -202,5 +200,6 @@ fn load_map(path: &str) -> Result<Map, Error> {
         }
     }
 
-    Ok(Map {tiles: tiles, xlen: x, ylen: y, zlen: z})
+
+    Ok(Map {tiles: tiles, materials: materials, xlen: x, ylen: y, zlen: z})
 }

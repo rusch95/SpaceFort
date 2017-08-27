@@ -1,38 +1,52 @@
 # Materials file
-[default]
+[[materials]]
+name = "default"
 id = 0
 color = [255,255,255,255]
-texture = ""
 diggable = false
 
-[air]
+[[materials]]
+name = "air"
+template = "default"
 id = 1
 color = [54,116,216,255]
 
-[stone]
+[[materials]]
+name = "stone"
+template = "default"
 id = 2
 color = [114,126,145,255]
 diggable = true
 
-[dirt]
+[[materials]]
+name = "dirt"
+template = "default"
 id = 3
 color = [96,78,31,255]
 diggable = true
 
-[sand]
+[[materials]]
+name = "sand"
+template = "default"
 id = 4
 color = [224,221,161,255]
 diggable = true
 
-[grass]
+[[materials]]
+name = "grass"
+template = "default"
 id = 5
 color = [25,165,18,255]
 diggable = true
 
-[downstairs]
-id = 9
+[[materials]]
+name = "upstairs"
+template = "default"
+id = 8
 color = [100,100,100,255]
 
-[upstairs]
-id = 8
+[[materials]]
+name = "downstairs"
+template = "default"
+id = 9
 color = [100,100,100,255]
