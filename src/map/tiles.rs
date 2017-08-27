@@ -31,7 +31,7 @@ impl Tile {
 pub struct Map {
     //Holds the terrain info as a vector of tiles
     tiles: Tiles, 
-    materials: Materials,
+    pub materials: Materials,
     xlen: i32,
     ylen: i32,
     zlen: i32,
@@ -103,7 +103,11 @@ impl Map {
 
     pub fn diggable(&self, pos: Pos) -> bool {
         if let Some(tile) = self.get_tile(pos) {
-            tile.material == 1 && tile.marked == false
+            if let Some(material) = self.materials.get(&tile.material) {
+                material.diggable && tile.marked == false
+            } else {
+                false
+            }
         } else {
             false
         }

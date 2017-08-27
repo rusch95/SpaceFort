@@ -2,51 +2,51 @@
 [[materials]]
 name = "default"
 id = 0
-color = [255,255,255,255]
+color = [0.78, 0.78, 0.78, 1.0]
 diggable = false
 
 [[materials]]
 name = "air"
 template = "default"
 id = 1
-color = [54,116,216,255]
+color = [0.21, 0.54, 0.84, 1.0]
 
 [[materials]]
 name = "stone"
 template = "default"
 id = 2
-color = [114,126,145,255]
+color = [0.44, 0.49, 0.57, 1.0]
 diggable = true
 
 [[materials]]
 name = "dirt"
 template = "default"
 id = 3
-color = [96,78,31,255]
+color = [0.37, 0.31, 0.12, 1.0]
 diggable = true
 
 [[materials]]
 name = "sand"
 template = "default"
 id = 4
-color = [224,221,161,255]
+color = [0.88, 0.87, 0.63, 1.0]
 diggable = true
 
 [[materials]]
 name = "grass"
 template = "default"
 id = 5
-color = [25,165,18,255]
+color = [0.10, 0.65, 0.07, 1.0]
 diggable = true
 
 [[materials]]
 name = "upstairs"
 template = "default"
 id = 8
-color = [100,100,100,255]
+color = [0.39, 0.39, 0.39, 1.0]
 
 [[materials]]
 name = "downstairs"
 template = "default"
 id = 9
-color = [100,100,100,255]
+color = [0.39, 0.39, 0.39, 1.0]

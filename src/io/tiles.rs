@@ -64,6 +64,7 @@ impl Game {
 
         let entities = &self.entities;
         let ch = &self.ch;
+        let map = &self.map;
 
         let selector = self.selector;
 
@@ -79,7 +80,12 @@ impl Game {
                     let xpos = X_PIXELS * (x as f64);
                     let ypos = Y_PIXELS * (y as f64);
                     let transform = c.transform.trans(xpos, ypos);
-                    let color = match tile.material {1 => BLUE, AIR_MAT => BLACK, _ => RED};
+                    let color = match map.materials.get(&tile.material) {
+                        Some(material) => {
+                            material.color
+                        },
+                        None => BLACK,
+                    };
                     rectangle(color, square, transform, gl);
                 }
             }
