@@ -76,6 +76,7 @@ impl Map {
 
     fn apply_tile_func<F>(&mut self, pos: Pos, func: F)
         where F: Fn(&mut Tile) {
+        // Perform some mutable operation to a tile
 
         let (x, y, z) = pos;
         if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
@@ -92,6 +93,18 @@ impl Map {
 
     pub fn mark(&mut self, pos: Pos) {
         self.apply_tile_func(pos, |mut tile| tile.marked = true);
+    }
+
+    pub fn unmark(&mut self, pos: Pos) {
+        self.apply_tile_func(pos, |mut tile| tile.marked = false);
+    }
+
+    pub fn diggable(&self, pos: Pos) -> bool {
+        if let Some(tile) = self.get_tile(pos) {
+            tile.material == 1 && tile.marked == false
+        } else {
+            false
+        }
     }
 
     #[allow(dead_code)]
