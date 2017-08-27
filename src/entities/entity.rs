@@ -6,6 +6,7 @@ use map::tiles::Map;
 pub type Pos = (i32, i32, i32);
 pub type Ticks = i32;
 pub type EntIds = Vec<Id>;
+pub type Entities = Vec<Entity>;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Entity {
@@ -27,9 +28,6 @@ impl Entity {
                 goal: None }
     }
 }
-        
-
-pub type Entities = Vec<Entity>;
 
 pub fn init_entities() -> Entities {
 
@@ -86,7 +84,6 @@ pub fn schedule_actions(game: &mut Game) {
 }
 
 fn schedule_action(map: &Map, ent: &Entity, atype: ActionType) -> Actions {
-    // Fix digging double spend
     let mut actions = Actions::new();
     match atype {
         ActionType::Dig(pos) => {
