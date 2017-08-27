@@ -13,6 +13,7 @@ pub struct Entity {
     pub pos: Pos,
     pub actions: Actions,
     pub movement_speed: Ticks,
+    pub dig_speed: Ticks,
     pub goal: Option<ActionType>,
 }
 
@@ -21,6 +22,7 @@ impl Entity {
         Entity { id: id, 
                 pos: pos, 
                 movement_speed: 20,
+                dig_speed: 300,
                 actions: Actions::new(), 
                 goal: None }
     }
@@ -84,12 +86,16 @@ pub fn schedule_actions(game: &mut Game) {
 }
 
 fn schedule_action(map: &Map, ent: &Entity, atype: ActionType) -> Actions {
-
+    // Fix digging double spend
     let mut actions = Actions::new();
     match atype {
         ActionType::Dig(pos) => {
-            actions.extend(path_next_to(map, ent, pos));
-            actions.push_back(Action{ atype: ActionType::Dig(pos), duration: 300 });
+            let path = path_next_to(map, ent, pos);
+            if path.len() > 0 {
+                actions.extend(path_next_to(map, ent, pos));
+                actions.push_back(Action{ atype: ActionType::Dig(pos), 
+                                          duration: ent.dig_speed });
+            }
         }
         _ => (),
     }

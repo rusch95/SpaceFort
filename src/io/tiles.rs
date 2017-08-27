@@ -235,7 +235,7 @@ pub fn init_graphics(map: Map, entities: Entities) {
                     if sel_state == SelState::Ents {
                         game.selected_entities = select_entities(&game.entities, tiles_selector);
                     } else {
-                        add_dig_tasks(&mut game.tasks, &game.map, tiles_selector);
+                        add_dig_tasks(&mut game.tasks, &mut game.map, tiles_selector);
                         sel_state = SelState::Ents;
                     }
 

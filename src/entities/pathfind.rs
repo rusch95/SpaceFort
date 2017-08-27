@@ -4,6 +4,9 @@ use entities::entity::{Entity, Pos};
 
 use pathfinding::fringe;
 
+const UNIT_DIST: i32 = 100;
+const DIAG_DIST: i32 = (UNIT_DIST as f64 * 1.414) as i32;
+
 // TODO Fix distances to use f64 instead of int
 
 pub fn path_to(map: &Map, ent: &mut Entity, end_pos: Pos) -> Actions {
@@ -36,10 +39,6 @@ pub fn path<F>(map: &Map, ent: &Entity, end_pos: Pos, end_det: F) -> Actions whe
 
     actions
 }
-
-
-const UNIT_DIST: i32 = 100;
-const DIAG_DIST: i32 = (UNIT_DIST as f64 * 1.414) as i32;
 
 fn dist(pos1: &Pos, pos2: &Pos) -> i32 {
     let (x1, y1, z1) = *pos1;
@@ -79,4 +78,3 @@ fn succ(map: &Map, pos: &Pos) -> Vec<(Pos, i32)> {
 
     successors
 }
- 

@@ -7,14 +7,24 @@ use io::base::CameraHandle;
 use map::constants::*;
 
 type Tiles = Vec<Tile>;
+type Material = u16;
 
 //TODO Clean up unwraps
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Tile {
     //Single map unit
-    pub material: u16,
+    pub material: Material,
+    pub marked: bool,
 }
+
+impl Tile {
+    fn new(material: Material) -> Tile {
+        Tile { material: material,
+               marked: false }
+    }
+}
+
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct Map {
@@ -53,6 +63,16 @@ impl Map {
         }
     }
 
+    fn do_thing_with_tile(&mut self, pos: Pos) {
+        let (x, y, z) = pos;
+        if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
+            ()
+        } else {
+            let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
+            self.tiles[index].material = 0;
+        }
+    }
+
     pub fn get_tile(&self, x: i32, y: i32, z: i32) -> Option<Tile> {
         //Tile accesor method
         if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
@@ -70,6 +90,16 @@ impl Map {
         } else {
             let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
             self.tiles[index].material = 0;
+        }
+    }
+
+    pub fn mark(&mut self, pos: Pos) {
+        let (x, y, z) = pos;
+        if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
+            ()
+        } else {
+            let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
+            self.tiles[index].marked = true;
         }
     }
 
@@ -133,8 +163,8 @@ pub fn handle_to_snapshot(handle: &CameraHandle, map: &Map) -> MapSnapshot {
 pub fn test_map() -> Map {
     //Generate test map of a single material
     //[debug] func
-    let def_tile = Tile {material: 0};
-    Map {tiles: vec![def_tile; 400000], xlen: 200, ylen: 200, zlen: 5}
+    let default_tile = Tile::new(0);
+    Map {tiles: vec![default_tile; 400000], xlen: 200, ylen: 200, zlen: 5}
 }
 
 pub fn init_map(root: &Path) -> Map {
@@ -163,7 +193,7 @@ fn load_map(path: &str) -> Result<Map, Error> {
         } else {
             for word in line.split_whitespace() {
                 let number: u16 = word.parse().unwrap();
-                tiles.push(Tile {material: number});
+                tiles.push(Tile::new(number));
             }
         }
     }
