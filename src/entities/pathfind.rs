@@ -19,27 +19,24 @@ pub fn path_next_to(map: &Map, ent: &Entity, end_pos: Pos) -> Actions {
 
 pub fn path<F>(map: &Map, ent: &Entity, end_pos: Pos, end_det: F) -> Actions where 
     F: Fn(&Pos) -> bool {    
+    let pathing_result = fringe(&ent.pos,
+                         |&p| succ(&map, &p),
+                         |&p| dist(&p, &end_pos),
+                         end_det);
 
     let mut actions = Actions::new();
-    let path = fringe(&ent.pos,
-                      |&p| succ(&map, &p),
-                      |&p| dist(&p, &end_pos),
-                      end_det);
-    match path {
-        Some(path) => {
-            let (path, cost) = path;
-            for coord in path {
-                actions.push_back(
-                    Action { atype: ActionType::Move(coord),
-                             duration: ent.movement_speed }
-                );
-            }
-        },
-        None => (),
+    if let Some((path, cost)) = pathing_result {
+        for coord in path {
+            actions.push_back(
+                Action { atype: ActionType::Move(coord),
+                         duration: ent.movement_speed }
+            );
+        }
     }
 
     actions
 }
+
 
 const UNIT_DIST: i32 = 100;
 const DIAG_DIST: i32 = (UNIT_DIST as f64 * 1.414) as i32;
@@ -51,40 +48,35 @@ fn dist(pos1: &Pos, pos2: &Pos) -> i32 {
     (sqr_dist as f64).sqrt() as i32
 }
 
-// TODO Rewrite using filter
 fn succ(map: &Map, pos: &Pos) -> Vec<(Pos, i32)> {
     let (x, y, z) = *pos;
 
-    // TODO Make this a const instead
-    let mut poss = Vec::new();
-    for i in [-1, 0, 1].iter() {
-        for j in [-1, 0, 1].iter() {
+    let mut successors = Vec::new();
+    for i in [-1, 0, 1].into_iter() {
+        for j in [-1, 0, 1].into_iter() {
             let cost = if *i == 0 || *j == 0 {UNIT_DIST} else {DIAG_DIST};
-            poss.push(((x + i, y + j, z), cost));
+            // Shadow X and Y with adjacent coords
+            let (x, y) = (x + *i, y + *j);
+            if let Some(tile) = map.get_tile(x, y, z) {
+                match tile.material {
+                    0 => successors.push(((x, y, z), cost)),
+                    8 => successors.push(((x, y, z), cost)),
+                    9 => successors.push(((x, y, z), cost)),
+                    _ => (),
+                }
+            }
         }
     };
 
-    let mut vec = Vec::new();
-    for ((i, j, k), cost) in poss {
-        // 2d movement
-        if let Some(tile) = map.get_tile(i, j, k) {
-            match tile.material {
-                0 => vec.push(((i, j, k), cost)),
-                8 => vec.push(((i, j, k), cost)),
-                9 => vec.push(((i, j, k), cost)),
-                _ => (),
-            }
-        }
-        // Up and down
-        if let Some(tile) = map.get_tile(x, y, z) {
-            match tile.material {
-                8 => vec.push(((x, y, z - 1), UNIT_DIST)),
-                9 => vec.push(((x, y, z + 1), UNIT_DIST)),
-                _ => (),
-            }
+    // Up and down
+    if let Some(tile) = map.get_tile(x, y, z) {
+        match tile.material {
+            8 => successors.push(((x, y, z - 1), UNIT_DIST)),
+            9 => successors.push(((x, y, z + 1), UNIT_DIST)),
+            _ => (),
         }
     }
 
-    vec
+    successors
 }
  
