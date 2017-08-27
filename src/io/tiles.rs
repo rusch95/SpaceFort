@@ -131,7 +131,7 @@ impl Game {
         for ref mut ent in &mut self.entities {
             for ent_id in &self.selected_entities {
                 if ent.id == *ent_id {
-                    path_to(&self.map, ent, dest_tile_pos);
+                    ent.actions = path_to(&self.map, ent, dest_tile_pos);
                 }
             }
         }
@@ -213,7 +213,7 @@ pub fn init_graphics(map: Map, entities: Entities) {
         };
 
         if let Some(pos) = e.mouse_cursor_args() {
-            cur_pos = (pos[0], pos[1] + 43.0);
+            cur_pos = (pos[0], pos[1]);
 
             if let Some(selector_pos) = selector_start {
                 game.selector = Some((selector_pos, cur_pos));

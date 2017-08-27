@@ -69,6 +69,7 @@ pub fn do_actions(game: &mut Game) {
 }
 
 pub fn schedule_actions(game: &mut Game) {
+
     for mut ent in game.entities.iter_mut() {
         if ent.actions.len() == 0 {
             for mut task in game.tasks.iter_mut() {
@@ -83,6 +84,7 @@ pub fn schedule_actions(game: &mut Game) {
 }
 
 fn schedule_action(map: &Map, ent: &Entity, atype: ActionType) -> Actions {
+
     let mut actions = Actions::new();
     match atype {
         ActionType::Dig(pos) => {
