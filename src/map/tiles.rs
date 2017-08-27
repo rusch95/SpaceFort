@@ -52,7 +52,7 @@ impl Map {
         for z in 0..self.zlen {
             for y in 0..self.ylen {
                 for x in 0..self.xlen {
-                    match self.get_tile(x, y, z) {
+                    match self.get_tile((x, y, z)) {
                         Some(tile) => print!("{0}", tile.material % 10),
                         None       => print!(" "),
                     }
@@ -63,18 +63,9 @@ impl Map {
         }
     }
 
-    fn do_thing_with_tile(&mut self, pos: Pos) {
-        let (x, y, z) = pos;
-        if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
-            ()
-        } else {
-            let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
-            self.tiles[index].material = 0;
-        }
-    }
-
-    pub fn get_tile(&self, x: i32, y: i32, z: i32) -> Option<Tile> {
+    pub fn get_tile(&self, pos: Pos) -> Option<Tile> {
         //Tile accesor method
+        let (x, y, z) = pos;
         if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
             None
         } else {
@@ -83,24 +74,24 @@ impl Map {
         }
     }
 
-    pub fn dig(&mut self, pos: Pos) {
+    fn apply_tile_func<F>(&mut self, pos: Pos, func: F)
+        where F: Fn(&mut Tile) {
+
         let (x, y, z) = pos;
         if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
             ()
         } else {
             let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
-            self.tiles[index].material = 0;
+            func(&mut self.tiles[index]);
         }
     }
 
+    pub fn dig(&mut self, pos: Pos) {
+        self.apply_tile_func(pos, |mut tile| tile.material = 0);
+    }
+
     pub fn mark(&mut self, pos: Pos) {
-        let (x, y, z) = pos;
-        if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
-            ()
-        } else {
-            let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
-            self.tiles[index].marked = true;
-        }
+        self.apply_tile_func(pos, |mut tile| tile.marked = true);
     }
 
     #[allow(dead_code)]
@@ -115,7 +106,7 @@ impl Map {
             for y in 0..self.ylen {
                 for x in 0..self.xlen {
                     try!(write!(&mut writer, "{} ", 
-                                self.get_tile(x, y, z).expect("Malformed map").material));
+                                self.get_tile((x, y, z)).expect("Malformed map").material));
                 }
                 try!(write!(&mut writer, "\n"));
             }
@@ -148,7 +139,7 @@ pub fn handle_to_snapshot(handle: &CameraHandle, map: &Map) -> MapSnapshot {
     let mut tiles = Vec::with_capacity((handle.xlen * handle.ylen) as usize);
     for y in handle.y..handle.y + handle.ylen {
         for x in handle.x..handle.x + handle.xlen {
-            match map.get_tile(x, y, handle.z) {
+            match map.get_tile((x, y, handle.z)) {
                 //Get_tile returns valid tile
                 Some(tile) => tiles.push(tile),
                 //Otherwise display as air

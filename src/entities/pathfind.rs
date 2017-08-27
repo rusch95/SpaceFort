@@ -56,7 +56,7 @@ fn succ(map: &Map, pos: &Pos) -> Vec<(Pos, i32)> {
             let cost = if *i == 0 || *j == 0 {UNIT_DIST} else {DIAG_DIST};
             // Shadow X and Y with adjacent coords
             let (x, y) = (x + *i, y + *j);
-            if let Some(tile) = map.get_tile(x, y, z) {
+            if let Some(tile) = map.get_tile((x, y, z)) {
                 match tile.material {
                     0 => successors.push(((x, y, z), cost)),
                     8 => successors.push(((x, y, z), cost)),
@@ -68,7 +68,7 @@ fn succ(map: &Map, pos: &Pos) -> Vec<(Pos, i32)> {
     };
 
     // Up and down
-    if let Some(tile) = map.get_tile(x, y, z) {
+    if let Some(tile) = map.get_tile((x, y, z)) {
         match tile.material {
             8 => successors.push(((x, y, z - 1), UNIT_DIST)),
             9 => successors.push(((x, y, z + 1), UNIT_DIST)),

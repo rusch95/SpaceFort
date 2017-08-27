@@ -52,7 +52,7 @@ pub fn add_dig_tasks(tasks: &mut Tasks, map: &mut Map, selector: TilesSelector) 
     for x in x1..(x2 + 1) {
         for y in y1..(y2 + 1) {
             for z in z1..(z2 + 1) {
-                if let Some(tile) = map.get_tile(x, y, z) {
+                if let Some(tile) = map.get_tile((x, y, z)) {
                     if tile.material == 1 && tile.marked == false {
                         map.mark((x, y, z));
                         tasks.push(Task::dig((x, y, z)));
