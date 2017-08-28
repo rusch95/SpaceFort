@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use map::constants::*;
 use toml;
 
-type MaterialID = u16;
+pub type MaterialID = u16;
 pub type Materials = HashMap<MaterialID, Material>;
 type ProtoMaterials = Vec<ProtoMaterial>;
 type ProtoMap = HashMap<String, ProtoMaterial>;
@@ -22,7 +22,9 @@ pub struct Material {
     pub id: MaterialID,
     pub texture: Option<String>,
     pub diggable: bool,
+    pub passable: bool,
     pub color: [f32; 4],
+    pub alt: MaterialID,
 }
 
 
@@ -34,7 +36,9 @@ pub struct ProtoMaterial {
     pub template: Option<String>,
     pub texture: Option<String>,
     pub diggable: Option<bool>,
+    pub passable: Option<bool>,
     pub color: Option<[f32; 4]>,
+    pub alt: Option<MaterialID>,
 }
 
 pub fn init_materials(root: &Path) -> Materials {
@@ -74,11 +78,13 @@ fn prototype(proto_materials: ProtoMaterials) -> Materials {
 fn resolve(proto: &ProtoMaterial, proto_map: &ProtoMap, mut material_map: &mut Materials) {
     match proto.template.clone() {
         None => {
-            let new_mat = Material { name: proto.name.clone(),
-                                     id: proto.id.clone(),
-                                     texture: None,  // FIXME
+            let new_mat = Material { name:     proto.name.clone(),
+                                     id:       proto.id.clone(),
+                                     texture:   None,  // FIXME
                                      diggable: proto.diggable.unwrap().clone(),
-                                     color: proto.color.unwrap().clone() };
+                                     passable: proto.passable.unwrap().clone(),
+                                     alt:      proto.alt.unwrap().clone(),
+                                     color:    proto.color.unwrap().clone() };
             material_map.insert(new_mat.id, new_mat);
         },
         Some(template) => {
@@ -100,8 +106,14 @@ fn resolve(proto: &ProtoMaterial, proto_map: &ProtoMap, mut material_map: &mut M
             if let Some(diggable) = proto.diggable.clone() {
                 new_mat.diggable = diggable;
             }
+            if let Some(passable) = proto.passable.clone() {
+                new_mat.passable = passable;
+            }
             if let Some(color) = proto.color.clone() {
                 new_mat.color = color;
+            }
+            if let Some(alt) = proto.alt.clone() {
+                new_mat.alt = alt;
             }
             material_map.insert(new_mat.id, new_mat);
         }

@@ -5,27 +5,25 @@ use std::io::{Read, Write, BufWriter, Error};
 use entities::entity::Pos;
 use io::base::CameraHandle;
 use map::constants::*;
-use map::material::{init_materials, Materials};
+use map::material::{init_materials, MaterialID, Material, Materials};
 
 type Tiles = Vec<Tile>;
-type Material = u16;
 
 //TODO Clean up unwraps
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Tile {
     //Single map unit
-    pub material: Material,
+    pub material: MaterialID,
     pub marked: bool,
 }
 
 impl Tile {
-    fn new(material: Material) -> Tile {
+    fn new(material: MaterialID) -> Tile {
         Tile { material: material,
                marked: false }
     }
 }
-
 
 #[derive(Clone, PartialEq)]
 pub struct Map {
@@ -90,7 +88,8 @@ impl Map {
     }
 
     pub fn dig(&mut self, pos: Pos) {
-        self.apply_tile_func(pos, |mut tile| tile.material = 0);
+        let alt = self.get_alt(pos);
+        self.apply_tile_func(pos, |mut tile| tile.material = alt);
     }
 
     pub fn mark(&mut self, pos: Pos) {
@@ -101,6 +100,26 @@ impl Map {
         self.apply_tile_func(pos, |mut tile| tile.marked = false);
     }
 
+    fn grab_material(&self, pos: Pos) -> Option<Material> {
+        if let Some(tile) = self.get_tile(pos) {
+            if let Some(material) = self.materials.get(&tile.material) {
+                Some(material.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn get_alt(&self, pos: Pos) -> MaterialID {
+        if let Some(material) = self.grab_material(pos) {
+            material.alt
+        } else {
+            0
+        }
+    }
+
     pub fn diggable(&self, pos: Pos) -> bool {
         if let Some(tile) = self.get_tile(pos) {
             if let Some(material) = self.materials.get(&tile.material) {
@@ -108,6 +127,14 @@ impl Map {
             } else {
                 false
             }
+        } else {
+            false
+        }
+    }
+
+    pub fn passable(&self, pos: Pos) -> bool {
+        if let Some(material) = self.grab_material(pos) {
+            material.passable
         } else {
             false
         }

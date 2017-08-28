@@ -34,7 +34,7 @@ pub fn init_entities() -> Entities {
     let mut entities = Entities::new();
 
     let mut entity = Entity::new(-1, (0, 0, 1));
-    let entity2 = Entity::new(-2, (5, 5, 1));
+    let entity2 = Entity::new(-2, (3, 3, 1));
 
     entities.push(entity);
     entities.push(entity2);
@@ -43,7 +43,6 @@ pub fn init_entities() -> Entities {
 }
 
 pub fn do_actions(game: &mut Game) {
-
     for mut ent in game.entities.iter_mut() {
         let pop = match ent.actions.front_mut() {
             Some(act) => {
@@ -69,7 +68,6 @@ pub fn do_actions(game: &mut Game) {
 }
 
 pub fn schedule_actions(game: &mut Game) {
-
     for mut ent in game.entities.iter_mut() {
         if ent.actions.len() == 0 {
             for mut task in game.tasks.iter_mut() {
