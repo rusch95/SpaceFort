@@ -44,7 +44,7 @@ pub fn init_entities() -> Entities {
 }
 
 pub fn do_actions(game: &mut Game) {
-    for mut ent in game.entities.iter_mut() {
+    for mut ent in game.state.entities.iter_mut() {
         let pop = match ent.actions.front_mut() {
             Some(act) => {
                 if act.duration > 0 {act.duration -= 1; false}
@@ -54,7 +54,7 @@ pub fn do_actions(game: &mut Game) {
                             ent.pos = pos;
                         },
                         ActionType::Dig(pos) => {
-                            game.map.dig(pos)
+                            game.state.map.dig(pos)
                         },
                         _ => {},
                     };
@@ -69,12 +69,12 @@ pub fn do_actions(game: &mut Game) {
 }
 
 pub fn schedule_actions(game: &mut Game) {
-    for mut ent in game.entities.iter_mut() {
+    for mut ent in game.state.entities.iter_mut() {
         if ent.actions.len() == 0 {
-            for mut task in game.tasks.iter_mut() {
+            for mut task in game.state.tasks.iter_mut() {
                 if task.owner == None {
                     task.owner = Some(ent.id);
-                    ent.actions = schedule_action(&game.map, ent, task.atype);
+                    ent.actions = schedule_action(&game.state.map, ent, task.atype);
                     break;
                 }
             }
