@@ -89,16 +89,16 @@ impl Map {
 
     pub fn dig(&mut self, pos: Pos) {
         let alt = self.get_alt(pos);
-        self.apply_tile_func(pos, |mut tile| tile.material = alt);
+        self.apply_tile_func(pos, |tile| tile.material = alt);
     }
 
     pub fn mark(&mut self, pos: Pos) {
-        self.apply_tile_func(pos, |mut tile| tile.marked = true);
+        self.apply_tile_func(pos, |tile| tile.marked = true);
     }
 
     #[allow(dead_code)]
     pub fn unmark(&mut self, pos: Pos) {
-        self.apply_tile_func(pos, |mut tile| tile.marked = false);
+        self.apply_tile_func(pos, |tile| tile.marked = false);
     }
 
     fn grab_material(&self, pos: Pos) -> Option<Material> {

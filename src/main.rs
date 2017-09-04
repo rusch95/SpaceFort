@@ -12,7 +12,6 @@ extern crate opengl_graphics;
 extern crate pathfinding;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde;
 extern crate toml;
 
 use std::path::Path;
