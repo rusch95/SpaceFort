@@ -58,6 +58,26 @@ impl GameState {
             cur_id: 0,
         }
     }
+
+    pub fn update(&mut self, args: &UpdateArgs) {
+        self.ticks += 1;
+
+        // Entity update and pathfinding
+        schedule_actions(self);
+        do_actions(self);
+
+        drop(args);
+    }
+
+    pub fn get_snap(&mut self) -> MapSnapshot {
+        handle_to_snapshot(&self.ch, &self.map)
+    }
+
+    #[allow(dead_code)]
+    pub fn give_id(&mut self) -> Id {
+        self.cur_id += 1;
+        self.cur_id
+    }
 }
 
 
@@ -73,7 +93,10 @@ impl Game {
     }
 
     pub fn render(&mut self, args: &RenderArgs) {
-        let snap = self.get_snap();
+        // TODO Keep track of FPS 
+        // TODO Dynamically resize window bounds
+
+        let snap = self.state.get_snap();
         let entities = &self.state.entities;
         let ch = &self.state.ch;
         let map = &self.state.map;
@@ -87,16 +110,6 @@ impl Game {
             draw_entities(c, gl, ch, entities);
             draw_selector(c, gl, selector);
         });
-    }
-
-    pub fn update(&mut self, args: &UpdateArgs) {
-        self.state.ticks += 1;
-
-        // Entity update and pathfinding
-        schedule_actions(self);
-        do_actions(self);
-
-        drop(args);
     }
 
     pub fn press_button(&mut self, button: Button) {
@@ -123,38 +136,6 @@ impl Game {
         }
     }
 
-    pub fn release_button(&mut self, button: Button) {
-        if button == Button::Mouse(MouseButton::Left) {
-            if let Some(selector) = self.input.selector {   
-                let tiles_selector = win_to_tile_selector(selector, &self.state.ch);
-
-                if self.input.sel_state == SelState::Ents {
-                    self.state.selected_entities = select_entities(&self.state.entities, tiles_selector);
-                } else {
-                    add_dig_tasks(&mut self.state.tasks, &mut self.state.map, tiles_selector);
-                    self.input.sel_state = SelState::Ents;
-                }
-
-                self.input.selector_start = None;
-                self.input.selector = None;
-            }
-        }
-    }
-
-    pub fn move_cursor(&mut self, pos: [f64; 2]) {
-        self.input.mouse_pos = (pos[0], pos[1]);
-
-        if let Some(selector_pos) = self.input.selector_start {
-            self.input.selector = Some((selector_pos, self.input.mouse_pos));
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn give_id(&mut self) -> Id {
-        self.state.cur_id += 1;
-        self.state.cur_id
-    }
-
     fn move_selected_entities(&mut self, mouse_pos: WinPos) {
         let dest_tile_pos = win_pos_to_tile(mouse_pos, &self.state.ch);
 
@@ -168,15 +149,6 @@ impl Game {
 
         self.state.selected_entities.clear();
     }
-
-    fn get_snap(&mut self) -> MapSnapshot {
-        handle_to_snapshot(&self.state.ch, &self.state.map)
-    }
-}
-
-
-impl GameState {
-
 }
 
 
@@ -187,6 +159,33 @@ impl Input {
             selector: None,
             sel_state: SelState::Ents,
             selector_start: None,
+        }
+    }
+    pub fn release_button(&mut self, state: &mut GameState, button: Button) {
+        if button == Button::Mouse(MouseButton::Left) {
+            if let Some(selector) = self.selector {   
+                let tiles_selector = win_to_tile_selector(selector, &state.ch);
+
+                if self.sel_state == SelState::Ents {
+                    state.selected_entities = select_entities(&state.entities, 
+                                                              tiles_selector);
+                } else {
+                    add_dig_tasks(&mut state.tasks, &mut state.map, tiles_selector);
+                    self.sel_state = SelState::Ents;
+                }
+
+                self.selector_start = None;
+                self.selector = None;
+            }
+        }
+    }
+
+
+    pub fn move_cursor(&mut self, pos: [f64; 2]) {
+        self.mouse_pos = (pos[0], pos[1]);
+
+        if let Some(selector_pos) = self.selector_start {
+            self.selector = Some((selector_pos, self.mouse_pos));
         }
     }
 }

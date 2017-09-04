@@ -1,7 +1,7 @@
 use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
 use io::base::Id;
-use io::tiles::Game;
+use io::tiles::GameState;
 use map::tiles::Map;
 
 pub type Pos = (i32, i32, i32);
@@ -43,8 +43,8 @@ pub fn init_entities() -> Entities {
     entities
 }
 
-pub fn do_actions(game: &mut Game) {
-    for ent in game.state.entities.iter_mut() {
+pub fn do_actions(state: &mut GameState) {
+    for ent in state.entities.iter_mut() {
         let pop = match ent.actions.front_mut() {
             Some(act) => {
                 if act.duration > 0 {act.duration -= 1; false}
@@ -54,7 +54,7 @@ pub fn do_actions(game: &mut Game) {
                             ent.pos = pos;
                         },
                         ActionType::Dig(pos) => {
-                            game.state.map.dig(pos)
+                            state.map.dig(pos)
                         },
                         _ => {},
                     };
@@ -68,13 +68,13 @@ pub fn do_actions(game: &mut Game) {
     };
 }
 
-pub fn schedule_actions(game: &mut Game) {
-    for ent in game.state.entities.iter_mut() {
+pub fn schedule_actions(state: &mut GameState) {
+    for ent in state.entities.iter_mut() {
         if ent.actions.len() == 0 {
-            for task in game.state.tasks.iter_mut() {
+            for task in state.tasks.iter_mut() {
                 if task.owner == None {
                     task.owner = Some(ent.id);
-                    ent.actions = schedule_action(&game.state.map, ent, task.atype);
+                    ent.actions = schedule_action(&state.map, ent, task.atype);
                     break;
                 }
             }
