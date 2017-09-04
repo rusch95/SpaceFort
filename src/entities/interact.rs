@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use std::cmp::{min, max};
 use map::tiles::Map;
 use entities::entity::{Entities, EntIds, Pos, Ticks};
-use io::tiles::{TilesSelector, Id};
+use io::base::{TilesSelector, Id};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Action {
@@ -14,7 +14,9 @@ pub struct Action {
 pub enum ActionType {
     Move(Pos),
     Dig(Pos),
+    #[allow(dead_code)]
     Attack(Id),
+    #[allow(dead_code)]
     Wait,
 }
 

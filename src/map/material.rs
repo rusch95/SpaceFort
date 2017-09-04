@@ -1,8 +1,7 @@
 use std::path::Path;
 use std::fs::File;
-use std::io::{Read, Error};
+use std::io::Read;
 use std::collections::HashMap;
-use map::constants::*;
 use toml;
 
 pub type MaterialID = u16;
@@ -41,6 +40,7 @@ pub struct ProtoMaterial {
     pub alt: Option<MaterialID>,
 }
 
+// TODO Genercize and dedup object, entity, and material 
 pub fn init_materials(root: &Path) -> Materials {
     // Read materials file to str
     let material_path = root.join("static/inc/materials/materials.toml");
@@ -55,10 +55,6 @@ pub fn init_materials(root: &Path) -> Materials {
                                             .expect("materials.toml invalid");
     let proto_materials = des_materials.materials.clone();
             
-    prototype(proto_materials)
-}
-
-fn prototype(proto_materials: ProtoMaterials) -> Materials {
     let mut proto_map = HashMap::new();
     for mat in proto_materials.iter() {
         proto_map.insert(mat.name.clone(), mat.clone());

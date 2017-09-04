@@ -28,7 +28,7 @@ pub fn path<F>(map: &Map, ent: &Entity, end_pos: Pos, end_det: F) -> Actions whe
                          end_det);
 
     let mut actions = Actions::new();
-    if let Some((path, cost)) = pathing_result {
+    if let Some((path, _)) = pathing_result {
         for coord in path {
             actions.push_back(
                 Action { atype: ActionType::Move(coord),

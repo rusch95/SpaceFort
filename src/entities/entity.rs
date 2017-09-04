@@ -1,6 +1,7 @@
 use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
-use io::tiles::{Game, Id};
+use io::base::Id;
+use io::tiles::Game;
 use map::tiles::Map;
 
 pub type Pos = (i32, i32, i32);
@@ -33,7 +34,7 @@ pub fn init_entities() -> Entities {
 
     let mut entities = Entities::new();
 
-    let mut entity = Entity::new(-1, (0, 0, 1));
+    let entity = Entity::new(-1, (0, 0, 1));
     let entity2 = Entity::new(-2, (3, 3, 1));
 
     entities.push(entity);

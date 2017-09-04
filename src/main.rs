@@ -22,8 +22,7 @@ use map::tiles::init_map;
 use entities::entity::init_entities;
 
 
-fn main() 
-{   
+fn main() {   
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
 
     let map = init_map(root);

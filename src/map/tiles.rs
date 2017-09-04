@@ -96,6 +96,7 @@ impl Map {
         self.apply_tile_func(pos, |mut tile| tile.marked = true);
     }
 
+    #[allow(dead_code)]
     pub fn unmark(&mut self, pos: Pos) {
         self.apply_tile_func(pos, |mut tile| tile.marked = false);
     }
