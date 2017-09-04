@@ -17,7 +17,10 @@ extern crate toml;
 
 use std::path::Path;
 
-use io::tiles::init_graphics;
+use piston::event_loop::*;
+use piston::input::*;
+
+use io::tiles::{ init_graphics, init_game };
 use map::tiles::init_map;
 use entities::entity::init_entities;
 
@@ -27,6 +30,34 @@ fn main() {
 
     let map = init_map(root);
     let entities = init_entities();
+    let mut window = init_graphics();
+    let mut game = init_game(map, entities);
+    let mut events = Events::new(EventSettings::new());
 
-    init_graphics(map, entities);
+    while let Some(e) = events.next(&mut window) {
+
+        if let Some(button) = e.press_args() {
+            game.press_button(button);
+        }
+
+        if let Some(pos) = e.mouse_cursor_args() {
+            game.move_cursor(pos);
+        }
+
+        if let Some(button) = e.release_args() {
+            game.release_button(button);
+        }
+
+        if let Some(r) = e.render_args() {
+            game.render(&r);
+        }
+
+        if let Some(u) = e.update_args() {
+            game.update(&u);
+        }
+
+        if game.done {
+            break;
+        }
+    }
 }

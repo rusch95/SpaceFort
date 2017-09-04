@@ -1,11 +1,11 @@
 use std::mem::drop;
+use std::collections::HashMap;
 
 use piston::window::WindowSettings;
-use piston::event_loop::*;
 use piston::input::*;
 use graphics::*;
 use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{ GlGraphics, OpenGL };
+use opengl_graphics::GlGraphics;
 
 use io::base::*;
 use io::constants::*;
@@ -21,16 +21,10 @@ pub struct Game {
 
     pub ch: CameraHandle,
     pub map: Map,
-
+    pub input: Input,
     pub entities: Entities,
-    pub tasks: Tasks,
-
-    cur_pos: WinPos,
-
     pub selected_entities: Vec<Id>,
-    pub selector: Option<Selector>,
-    pub selector_start: Option<WinPos>, 
-    pub sel_state: SelState,
+    pub tasks: Tasks,
 
     pub ticks: Ticks,
     #[allow(dead_code)]
@@ -39,36 +33,48 @@ pub struct Game {
     pub done: bool,
 }
 
-pub struct Graphics {
+pub struct Input {
+    mouse_pos: WinPos,
+    pub selector: Option<Selector>,
+    pub selector_start: Option<WinPos>, 
+    pub sel_state: SelState,
+
+}
+
+impl Input {
+    fn new() -> Input {
+        Input {
+            mouse_pos: (0.0, 0.0),
+            selector: None,
+            sel_state: SelState::Ents,
+            selector_start: None,
+        }
+    }
 }
 
 
 impl Game {
-
-    fn new(opengl: OpenGL, map: Map, entities: Entities) -> Game {
+    pub fn new(map: Map, entities: Entities) -> Game {
         Game {
-                gl: GlGraphics::new(opengl),
-                ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
-                map: map,
-                entities: entities,
-                tasks: Vec::new(),
-                selected_entities: Vec::new(),
-                selector: None,
-                ticks: 0,
-                cur_id: 0,
-                cur_pos: (0.0, 0.0),
-                sel_state: SelState::Ents,
-                selector_start: None,
-                done: false,
-            }
+            gl: GlGraphics::new(OPEN_GL_VERSION),
+            ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
+            map: map,
+            entities: entities,
+            selected_entities: Vec::new(),
+            tasks: Vec::new(),
+            ticks: 0,
+            cur_id: 0,
+            done: false,
+            input: Input::new(),
+        }
     }
 
-    fn render(&mut self, args: &RenderArgs) {
+    pub fn render(&mut self, args: &RenderArgs) {
         let snap = self.get_snap();
         let entities = &self.entities;
         let ch = &self.ch;
         let map = &self.map;
-        let selector = self.selector;
+        let selector = self.input.selector;
 
         self.gl.draw(args.viewport(), |c, gl| {
             // Clear the screen.
@@ -80,7 +86,7 @@ impl Game {
         });
     }
 
-    fn update(&mut self, args: &UpdateArgs) {
+    pub fn update(&mut self, args: &UpdateArgs) {
         self.ticks += 1;
 
         // Entity update and pathfinding
@@ -90,10 +96,10 @@ impl Game {
         drop(args);
     }
 
-    fn press_button(&mut self, button: Button) {
+    pub fn press_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
-            self.selector_start = Some(self.cur_pos);
-            self.selector = Some((self.cur_pos, self.cur_pos))
+            self.input.selector_start = Some(self.input.mouse_pos);
+            self.input.selector = Some((self.input.mouse_pos, self.input.mouse_pos))
         }
 
         // TODO Change to dictionary mapping keys to functions
@@ -105,49 +111,49 @@ impl Game {
                 Key::Up    => self.ch.y -= 1,
                 Key::O     => self.ch.z += 1,
                 Key::P     => self.ch.z -= 1,
-                Key::D     => self.sel_state = SelState::Digging,
-                Key::Y     => {let cur_pos = self.cur_pos;
-                               self.move_selected_entities(cur_pos);},
+                Key::D     => self.input.sel_state = SelState::Digging,
+                Key::Y     => {let mouse_pos = self.input.mouse_pos;
+                               self.move_selected_entities(mouse_pos);},
                 Key::Q     => self.done = true,
                 _          => (),
             }
         }
     }
 
-    fn release_button(&mut self, button: Button) {
+    pub fn release_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
-            if let Some(selector) = self.selector {   
+            if let Some(selector) = self.input.selector {   
                 let tiles_selector = win_to_tile_selector(selector, &self.ch);
 
-                if self.sel_state == SelState::Ents {
+                if self.input.sel_state == SelState::Ents {
                     self.selected_entities = select_entities(&self.entities, tiles_selector);
                 } else {
                     add_dig_tasks(&mut self.tasks, &mut self.map, tiles_selector);
-                    self.sel_state = SelState::Ents;
+                    self.input.sel_state = SelState::Ents;
                 }
 
-                self.selector_start = None;
-                self.selector = None;
+                self.input.selector_start = None;
+                self.input.selector = None;
             }
         }
     }
 
-    fn move_cursor(&mut self, pos: [f64; 2]) {
-        self.cur_pos = (pos[0], pos[1]);
+    pub fn move_cursor(&mut self, pos: [f64; 2]) {
+        self.input.mouse_pos = (pos[0], pos[1]);
 
-        if let Some(selector_pos) = self.selector_start {
-            self.selector = Some((selector_pos, self.cur_pos));
+        if let Some(selector_pos) = self.input.selector_start {
+            self.input.selector = Some((selector_pos, self.input.mouse_pos));
         }
     }
 
     #[allow(dead_code)]
-    fn give_id(&mut self) -> Id {
+    pub fn give_id(&mut self) -> Id {
         self.cur_id += 1;
         self.cur_id
     }
 
-    fn move_selected_entities(&mut self, cur_pos: WinPos) {
-        let dest_tile_pos = win_pos_to_tile(cur_pos, &self.ch);
+    fn move_selected_entities(&mut self, mouse_pos: WinPos) {
+        let dest_tile_pos = win_pos_to_tile(mouse_pos, &self.ch);
 
         for ref mut ent in &mut self.entities {
             for ent_id in &self.selected_entities {
@@ -210,45 +216,17 @@ fn draw_selector(c: Context, gl: &mut GlGraphics, selector: Option<Selector>) {
     }
 }
 
-pub fn init_graphics(map: Map, entities: Entities) {
-    let opengl = OpenGL::V3_2;
+pub fn init_game(map: Map, entities: Entities) -> Game {
+    Game::new(map, entities)
+}
 
-    let mut window: Window = WindowSettings::new(
+pub fn init_graphics() -> Window {
+    WindowSettings::new(
         "SpaceFort",
         [X_WIN_SIZE, Y_WIN_SIZE]
         )
-        .opengl(opengl)
+        .opengl(OPEN_GL_VERSION)
         .exit_on_esc(true)
         .build()
-        .unwrap();
-
-    let mut game = Game::new(opengl, map, entities);
-        
-    let mut events = Events::new(EventSettings::new());
-    while let Some(e) = events.next(&mut window) {
-
-        if let Some(button) = e.press_args() {
-            game.press_button(button);
-        }
-
-        if let Some(pos) = e.mouse_cursor_args() {
-            game.move_cursor(pos);
-        }
-
-        if let Some(button) = e.release_args() {
-            game.release_button(button);
-        }
-
-        if let Some(r) = e.render_args() {
-            game.render(&r);
-        }
-
-        if let Some(u) = e.update_args() {
-            game.update(&u);
-        }
-
-        if game.done {
-            break;
-        }
-    }
+        .unwrap()
 }

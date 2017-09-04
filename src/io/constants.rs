@@ -1,3 +1,7 @@
+use opengl_graphics::OpenGL;
+
+pub const OPEN_GL_VERSION: OpenGL = OpenGL::V3_2;
+
 pub const BLACK:   [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 #[allow(dead_code)]
 pub const WHITE:   [f32; 4] = [1.0, 1.0, 1.0, 1.0];
