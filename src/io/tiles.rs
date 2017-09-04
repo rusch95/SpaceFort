@@ -3,6 +3,7 @@ use std::mem::drop;
 use piston::window::WindowSettings;
 use piston::event_loop::*;
 use piston::input::*;
+use graphics::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
 
@@ -38,6 +39,9 @@ pub struct Game {
     pub done: bool,
 }
 
+pub struct Graphics {
+}
+
 
 impl Game {
 
@@ -60,57 +64,19 @@ impl Game {
     }
 
     fn render(&mut self, args: &RenderArgs) {
-        use graphics::*;
-
-        let square = rectangle::square(0.0, 0.0, X_PIXELS);
-
         let snap = self.get_snap();
-
         let entities = &self.entities;
         let ch = &self.ch;
         let map = &self.map;
-
         let selector = self.selector;
 
         self.gl.draw(args.viewport(), |c, gl| {
             // Clear the screen.
             clear(BLACK, gl);
 
-            // Draw tiles
-            for y in 0..snap.ylen {
-                for x in 0..snap.xlen {
-                    let index = (x + y * snap.xlen) as usize;
-                    let tile = snap.tiles[index];
-                    let xpos = X_PIXELS * (x as f64);
-                    let ypos = Y_PIXELS * (y as f64);
-                    let transform = c.transform.trans(xpos, ypos);
-                    let color = match map.materials.get(&tile.material) {
-                        Some(material) => {
-                            material.color
-                        },
-                        None => BLACK,
-                    };
-                    rectangle(color, square, transform, gl);
-                }
-            }
-
-            // Draw entities
-            for entity in entities.iter() {
-                let (x, y, z) = entity.pos;
-                if z == ch.z &&
-                       (ch.x <= x) && (x <= ch.xlen) &&
-                       (ch.y <= y) && (y <= ch.ylen) {
-                    let (winx, winy) = tile_pos_to_win(entity.pos, &ch);
-                    let transform = c.transform.trans(winx, winy);
-                    rectangle(YELLOW, square, transform, gl);
-                }
-            }
-
-            // Draw selector
-            if let Some(((x1, y1), (x2, y2))) = selector {
-                let selector_rect = [x1, y1, x2 - x1, y2 - y1];
-                rectangle(SELECTOR_COLOR, selector_rect, c.transform, gl);
-            }
+            draw_tiles(c, gl, &snap, map);
+            draw_entities(c, gl, ch, entities);
+            draw_selector(c, gl, selector);
         });
     }
 
@@ -125,7 +91,6 @@ impl Game {
     }
 
     fn press_button(&mut self, button: Button) {
-        // TODO Same as above. Maybe merge the two together
         if button == Button::Mouse(MouseButton::Left) {
             self.selector_start = Some(self.cur_pos);
             self.selector = Some((self.cur_pos, self.cur_pos))
@@ -197,6 +162,51 @@ impl Game {
 
     fn get_snap(&mut self) -> MapSnapshot {
         handle_to_snapshot(&self.ch, &self.map)
+    }
+}
+
+fn draw_tiles(c: Context, gl: &mut GlGraphics, 
+              snap: &MapSnapshot, map: &Map) {
+    let square = rectangle::square(0.0, 0.0, X_PIXELS);
+
+    for y in 0..snap.ylen {
+        for x in 0..snap.xlen {
+            let index = (x + y * snap.xlen) as usize;
+            let tile = snap.tiles[index];
+            let xpos = X_PIXELS * (x as f64);
+            let ypos = Y_PIXELS * (y as f64);
+            let transform = c.transform.trans(xpos, ypos);
+            let color = match map.materials.get(&tile.material) {
+                Some(material) => {
+                    material.color
+                },
+                None => BLACK,
+            };
+            rectangle(color, square, transform, gl);
+        }
+    }
+}
+
+fn draw_entities(c: Context, gl: &mut GlGraphics, 
+                 ch: &CameraHandle, entities: &Entities) {
+    let square = rectangle::square(0.0, 0.0, X_PIXELS);
+
+    for entity in entities.iter() {
+        let (x, y, z) = entity.pos;
+        if z == ch.z &&
+               (ch.x <= x) && (x <= ch.xlen) &&
+               (ch.y <= y) && (y <= ch.ylen) {
+            let (winx, winy) = tile_pos_to_win(entity.pos, &ch);
+            let transform = c.transform.trans(winx, winy);
+            rectangle(YELLOW, square, transform, gl);
+        }
+    }
+}
+
+fn draw_selector(c: Context, gl: &mut GlGraphics, selector: Option<Selector>) {
+    if let Some(((x1, y1), (x2, y2))) = selector {
+        let selector_rect = [x1, y1, x2 - x1, y2 - y1];
+        rectangle(SELECTOR_COLOR, selector_rect, c.transform, gl);
     }
 }
 
