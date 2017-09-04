@@ -17,7 +17,6 @@ pub struct CameraHandle {
     pub z: i32,
 }
 
-
 pub type WinPos = (f64, f64);
 pub type Selector = (WinPos, WinPos);
 pub type TilesSelector = (Pos, Pos);

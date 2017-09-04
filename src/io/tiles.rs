@@ -112,6 +112,47 @@ impl Game {
         });
     }
 
+    pub fn forward(&mut self) {
+        self.state.ch.y -= 1;
+    }
+
+    pub fn back(&mut self) {
+        self.state.ch.y += 1;
+    }
+
+    pub fn left(&mut self) {
+        self.state.ch.x -= 1;
+    }
+
+    pub fn right(&mut self) {
+        self.state.ch.x += 1;
+    }
+
+    pub fn up(&mut self) {
+        self.state.ch.z -= 1;
+    }
+
+    pub fn down(&mut self) {
+        self.state.ch.z += 1;
+    }
+
+    pub fn quit(&mut self) {
+        self.done = true;
+    }
+
+    pub fn set_digging(&mut self) {
+        self.input.sel_state = SelState::Digging;
+    }
+
+    pub fn move_to(&mut self) {
+        let mouse_pos = self.input.mouse_pos;
+        self.move_selected_entities(mouse_pos);
+    }
+
+    pub fn null(&mut self) {
+
+    }
+
     pub fn press_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
             self.input.selector_start = Some(self.input.mouse_pos);
@@ -120,19 +161,26 @@ impl Game {
 
         // TODO Change to dictionary mapping keys to functions
         if let Button::Keyboard(key) = button {
-            match key {
-                Key::Right => self.state.ch.x += 1,
-                Key::Left  => self.state.ch.x -= 1,
-                Key::Down  => self.state.ch.y += 1,
-                Key::Up    => self.state.ch.y -= 1,
-                Key::O     => self.state.ch.z += 1,
-                Key::P     => self.state.ch.z -= 1,
-                Key::D     => self.input.sel_state = SelState::Digging,
-                Key::Y     => {let mouse_pos = self.input.mouse_pos;
-                               self.move_selected_entities(mouse_pos);},
-                Key::Q     => self.done = true,
-                _          => (),
-            }
+            let func = match key {
+                Key::Right  => Game::right,
+                Key::Left   => Game::left, 
+                Key::Down   => Game::back,
+                Key::Up     => Game::forward, 
+                Key::Comma  => Game::down,
+                Key::Period => Game::up,
+                Key::J      => Game::back,
+                Key::K      => Game::forward,
+                Key::H      => Game::left,
+                Key::L      => Game::right,
+                Key::O      => Game::up, 
+                Key::P      => Game::down, 
+                Key::D      => Game::set_digging,
+                Key::Y      => Game::move_to,
+                Key::Q      => Game::quit,
+                _           => Game::null,
+            };
+
+            func(self);
         }
     }
 
@@ -161,6 +209,7 @@ impl Input {
             selector_start: None,
         }
     }
+
     pub fn release_button(&mut self, state: &mut GameState, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
             if let Some(selector) = self.selector {   
