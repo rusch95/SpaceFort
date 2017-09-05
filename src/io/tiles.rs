@@ -1,5 +1,4 @@
 use std::mem::drop;
-use std::collections::HashMap;
 
 use piston::window::WindowSettings;
 use piston::input::*;
@@ -149,9 +148,7 @@ impl Game {
         self.move_selected_entities(mouse_pos);
     }
 
-    pub fn null(&mut self) {
-
-    }
+    pub fn null(&mut self) {}
 
     pub fn press_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
@@ -168,15 +165,15 @@ impl Game {
                 Key::Up     => Game::forward, 
                 Key::Comma  => Game::down,
                 Key::Period => Game::up,
+                Key::D      => Game::set_digging,
+                Key::H      => Game::left,
                 Key::J      => Game::back,
                 Key::K      => Game::forward,
-                Key::H      => Game::left,
                 Key::L      => Game::right,
                 Key::O      => Game::up, 
                 Key::P      => Game::down, 
-                Key::D      => Game::set_digging,
-                Key::Y      => Game::move_to,
                 Key::Q      => Game::quit,
+                Key::Y      => Game::move_to,
                 _           => Game::null,
             };
 
