@@ -1,10 +1,14 @@
 =Vital=
 Attack and die
 Creature properties from materials file
-Group movement and occlusion
 Necromancers
 Golems
 Ents
+
+=Wishlist=
+Macro up the toml loading
+Network
+Save games
 
 =Nice to have=
 Liquids

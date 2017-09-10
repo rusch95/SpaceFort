@@ -1,5 +1,8 @@
+use std::path::Path;
+
 use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
+use entities::creatures::init_creatures;
 use io::base::Id;
 use io::tiles::GameState;
 use map::tiles::Map;
@@ -8,6 +11,12 @@ pub type Pos = (i32, i32, i32);
 pub type Ticks = i32;
 pub type EntIds = Vec<Id>;
 pub type Entities = Vec<Entity>;
+
+
+pub struct EntState {
+    pub entities: Entities,
+}
+
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Entity {
@@ -18,6 +27,7 @@ pub struct Entity {
     pub dig_speed: Ticks,
     pub goal: Option<ActionType>,
 }
+
 
 impl Entity {
     fn new(id: Id, pos: Pos) -> Entity {
@@ -30,18 +40,22 @@ impl Entity {
     }
 }
 
-pub fn init_entities() -> Entities {
+
+pub fn init_entities(root: &Path) -> Entities {
 
     let mut entities = Entities::new();
 
     let entity = Entity::new(-1, (0, 0, 1));
     let entity2 = Entity::new(-2, (3, 3, 1));
+    let entity3 = Entity::new(-3, (4, 4, 1));
 
     entities.push(entity);
     entities.push(entity2);
+    entities.push(entity3);
         
     entities
 }
+
 
 pub fn do_actions(state: &mut GameState) {
     for ent in state.entities.iter_mut() {
@@ -68,6 +82,7 @@ pub fn do_actions(state: &mut GameState) {
     };
 }
 
+
 pub fn schedule_actions(state: &mut GameState) {
     for ent in state.entities.iter_mut() {
         if ent.actions.len() == 0 {
@@ -81,6 +96,7 @@ pub fn schedule_actions(state: &mut GameState) {
         }
     }
 }
+
 
 fn schedule_action(map: &Map, ent: &Entity, atype: ActionType) -> Actions {
     let mut actions = Actions::new();

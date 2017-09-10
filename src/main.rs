@@ -28,7 +28,7 @@ fn main() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
 
     let map = init_map(root);
-    let entities = init_entities();
+    let entities = init_entities(root);
     let mut window = init_graphics();
     let mut game = init_game(map, entities);
     let mut events = Events::new(EventSettings::new());
