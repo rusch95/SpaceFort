@@ -10,7 +10,7 @@ use io::base::*;
 use io::constants::*;
 use io::utils::*;
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
-use entities::entity::{EntState, Ticks, do_actions, schedule_actions};
+use entities::entity::{EntState, Entities, Ticks, do_actions, schedule_actions};
 use entities::interact::{select_entities, add_dig_tasks, Tasks};
 use entities::pathfind::path_to;
 
@@ -82,7 +82,7 @@ impl GameState {
 
 impl Game {
     // Top level global state
-    pub fn new(map: Map, ent_state: EntState -> Game {
+    pub fn new(map: Map, ent_state: EntState) -> Game {
         Game {
             gl: GlGraphics::new(OPEN_GL_VERSION),
             input: Input::new(),
@@ -213,7 +213,7 @@ impl Input {
                 let tiles_selector = win_to_tile_selector(selector, &state.ch);
 
                 if self.sel_state == SelState::Ents {
-                    state.selected_entities = select_entities(&state.entities, 
+                    state.selected_entities = select_entities(&state.ent_state.entities, 
                                                               tiles_selector);
                 } else {
                     add_dig_tasks(&mut state.tasks, &mut state.map, tiles_selector);
@@ -260,10 +260,10 @@ fn draw_tiles(c: Context, gl: &mut GlGraphics,
 }
 
 fn draw_entities(c: Context, gl: &mut GlGraphics, 
-                 ch: &CameraHandle, entities: &Entities) {
+                 ch: &CameraHandle, ent_state: &EntState) {
     let square = rectangle::square(0.0, 0.0, X_PIXELS);
 
-    for entity in entities.iter() {
+    for entity in ent_state.entities.iter() {
         let (x, y, z) = entity.pos;
         if z == ch.z &&
                (ch.x <= x) && (x <= ch.xlen) &&
@@ -282,8 +282,8 @@ fn draw_selector(c: Context, gl: &mut GlGraphics, selector: Option<Selector>) {
     }
 }
 
-pub fn init_game(map: Map, entities: Entities) -> Game {
-    Game::new(map, entities)
+pub fn init_game(map: Map, ent_state: EntState) -> Game {
+    Game::new(map, ent_state)
 }
 
 pub fn init_graphics() -> Window {

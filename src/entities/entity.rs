@@ -66,7 +66,7 @@ impl Entity {
 pub fn init_entities(root: &Path) -> EntState {
 
     let creature_types = init_creatures(root);
-    let ent_state = EntState::new(creature_types);
+    let mut ent_state = EntState::new(creature_types);
 
     let entity = Entity::new(-1, (0, 0, 1));
     let entity2 = Entity::new(-2, (3, 3, 1));
@@ -81,7 +81,7 @@ pub fn init_entities(root: &Path) -> EntState {
 
 
 pub fn do_actions(state: &mut GameState) {
-    for ent in state.entities.iter_mut() {
+    for ent in state.ent_state.entities.iter_mut() {
         let pop = match ent.actions.front_mut() {
             Some(act) => {
                 if act.duration > 0 {act.duration -= 1; false}
@@ -107,7 +107,7 @@ pub fn do_actions(state: &mut GameState) {
 
 
 pub fn schedule_actions(state: &mut GameState) {
-    for ent in state.entities.iter_mut() {
+    for ent in state.ent_state.entities.iter_mut() {
         if ent.actions.len() == 0 {
             for task in state.tasks.iter_mut() {
                 if task.owner == None {
