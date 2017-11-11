@@ -10,7 +10,7 @@ use io::base::*;
 use io::constants::*;
 use io::utils::*;
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
-use entities::entity::{Entities, Ticks, do_actions, schedule_actions};
+use entities::entity::{EntState, Ticks, do_actions, schedule_actions};
 use entities::interact::{select_entities, add_dig_tasks, Tasks};
 use entities::pathfind::path_to;
 
@@ -26,7 +26,7 @@ pub struct Game {
 pub struct GameState {
     pub ch: CameraHandle,
     pub map: Map,
-    pub entities: Entities,
+    pub ent_state: EntState,
     pub selected_entities: Vec<Id>,
     pub tasks: Tasks,
     pub ticks: Ticks,
@@ -46,11 +46,11 @@ pub struct Input {
 
 impl GameState {
     // Contains all state corresponding to a running game
-    pub fn new(map: Map, entities: Entities) -> GameState {
+    pub fn new(map: Map, ent_state: EntState) -> GameState {
         GameState {
             ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
             map: map,
-            entities: entities,
+            ent_state: ent_state,
             selected_entities: Vec::new(),
             tasks: Vec::new(),
             ticks: 0,
@@ -82,11 +82,11 @@ impl GameState {
 
 impl Game {
     // Top level global state
-    pub fn new(map: Map, entities: Entities) -> Game {
+    pub fn new(map: Map, ent_state: EntState -> Game {
         Game {
             gl: GlGraphics::new(OPEN_GL_VERSION),
             input: Input::new(),
-            state: GameState::new(map, entities),
+            state: GameState::new(map, ent_state),
             done: false,
         }
     }
@@ -96,7 +96,7 @@ impl Game {
         // TODO Dynamically resize window bounds
 
         let snap = self.state.get_snap();
-        let entities = &self.state.entities;
+        let ent_state = &self.state.ent_state;
         let ch = &self.state.ch;
         let map = &self.state.map;
         let selector = self.input.selector;
@@ -106,7 +106,7 @@ impl Game {
             clear(BLACK, gl);
 
             draw_tiles(c, gl, &snap, map);
-            draw_entities(c, gl, ch, entities);
+            draw_entities(c, gl, ch, ent_state);
             draw_selector(c, gl, selector);
         });
     }
@@ -184,7 +184,7 @@ impl Game {
     fn move_selected_entities(&mut self, mouse_pos: WinPos) {
         let dest_tile_pos = win_pos_to_tile(mouse_pos, &self.state.ch);
 
-        for ref mut ent in &mut self.state.entities {
+        for ref mut ent in &mut self.state.ent_state.entities {
             for ent_id in &self.state.selected_entities {
                 if ent.id == *ent_id {
                     ent.actions = path_to(&self.state.map, ent, dest_tile_pos);

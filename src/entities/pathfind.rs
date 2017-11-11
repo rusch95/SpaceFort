@@ -32,7 +32,7 @@ pub fn path<F>(map: &Map, ent: &Entity, end_pos: Pos, end_det: F) -> Actions whe
         for coord in path {
             actions.push_back(
                 Action { atype: ActionType::Move(coord),
-                         duration: ent.movement_speed }
+                         duration: ent.movement_speed() }
             );
         }
     }

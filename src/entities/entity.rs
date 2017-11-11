@@ -2,7 +2,7 @@ use std::path::Path;
 
 use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
-use entities::creatures::init_creatures;
+use entities::creatures::{CreatureID, CreatureMap, init_creatures};
 use io::base::Id;
 use io::tiles::GameState;
 use map::tiles::Map;
@@ -15,45 +15,68 @@ pub type Entities = Vec<Entity>;
 
 pub struct EntState {
     pub entities: Entities,
+    pub creature_types: CreatureMap,
+}
+
+impl EntState {
+    fn new(creature_types: CreatureMap) -> EntState {
+        EntState {
+            entities: Entities::new(),
+            creature_types: creature_types,
+        }
+    }
+
+    fn add(&mut self, entity: Entity) {
+        self.entities.push(entity);
+    }
 }
 
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Entity {
     pub id: Id,
+    pub creature_id: CreatureID,
     pub pos: Pos,
     pub actions: Actions,
-    pub movement_speed: Ticks,
-    pub dig_speed: Ticks,
     pub goal: Option<ActionType>,
 }
 
 
 impl Entity {
     fn new(id: Id, pos: Pos) -> Entity {
-        Entity { id: id, 
-                pos: pos, 
-                movement_speed: 20,
-                dig_speed: 300,
-                actions: Actions::new(), 
-                goal: None }
+        Entity { 
+            id: id, 
+            creature_id: 1,
+            pos: pos, 
+            actions: Actions::new(), 
+            goal: None 
+        }
+    }
+
+    pub fn dig_speed(&self) -> Ticks {
+        300
+    }
+
+    pub fn movement_speed(&self) -> Ticks {
+        15
     }
 }
 
 
-pub fn init_entities(root: &Path) -> Entities {
+pub fn init_entities(root: &Path) -> EntState {
 
-    let mut entities = Entities::new();
+    let creature_types = init_creatures(root);
+    let ent_state = EntState::new(creature_types);
 
     let entity = Entity::new(-1, (0, 0, 1));
     let entity2 = Entity::new(-2, (3, 3, 1));
     let entity3 = Entity::new(-3, (4, 4, 1));
 
-    entities.push(entity);
-    entities.push(entity2);
-    entities.push(entity3);
+    ent_state.add(entity);
+    ent_state.add(entity2);
+    ent_state.add(entity3);
         
-    entities
+    ent_state
 }
 
 
@@ -106,7 +129,7 @@ fn schedule_action(map: &Map, ent: &Entity, atype: ActionType) -> Actions {
             if path.len() > 0 {
                 actions.extend(path_next_to(map, ent, pos));
                 actions.push_back(Action{ atype: ActionType::Dig(pos), 
-                                          duration: ent.dig_speed });
+                                          duration: ent.dig_speed() });
             }
         }
         _ => (),

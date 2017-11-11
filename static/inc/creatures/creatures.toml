@@ -1,19 +1,26 @@
 [[creatures]]
 name = "default"
 id = 0
-color = [255,255,255,255]
+texture = ""
+dig_speed = 30
+movement_speed = 30
+color = [1.0,1.0,1.0,1.0]
+alt = 0
 
 [[creatures]]
 name = "dwarf"
 id = 1
-color = [240,30,30,255]
+template = "default"
+color = [0.9,0.1,0.1,1.0]
 
 [[creatures]]
 name = "dog"
 id = 2
-color = [30,240,30,255]
+template = "default"
+color = [0.1,0.9,0.1,1.0]
 
 [[creatures]]
 name = "troll"
 id = 3
-color = [30,30,240,255]
+template = "default"
+color = [0.1,0.1,0.9,1.0]

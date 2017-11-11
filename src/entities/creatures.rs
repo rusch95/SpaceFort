@@ -7,7 +7,7 @@ use entities::entity::Ticks;
 use toml;
 
 pub type CreatureID = u16;
-pub type Creatures = HashMap<CreatureID, Creature>;
+pub type CreatureMap = HashMap<CreatureID, Creature>;
 type ProtoCreatures = Vec<ProtoCreature>;
 type ProtoCreatureMap = HashMap<String, ProtoCreature>;
 
@@ -20,7 +20,6 @@ struct DeserializeStruct {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Creature {
-    // The Stuff dreams are made of
     pub name: String,
     pub id: CreatureID,
     pub texture: Option<String>,
@@ -44,7 +43,7 @@ pub struct ProtoCreature {
 }
 
 // TODO Genercize and dedup object, entity, and material 
-pub fn init_creatures(root: &Path) -> Creatures {
+pub fn init_creatures(root: &Path) -> CreatureMap {
     // Read creatures file to str
     let creature_path = root.join("static/inc/creatures/creatures.toml");
     let path_str = creature_path
@@ -74,7 +73,7 @@ pub fn init_creatures(root: &Path) -> Creatures {
 }
 
 fn resolve(proto: &ProtoCreature, proto_map: &ProtoCreatureMap, 
-           mut creature_map: &mut Creatures) {
+           mut creature_map: &mut CreatureMap) {
     match proto.template.clone() {
         None => {
             let new_creat = Creature { 
@@ -93,6 +92,29 @@ fn resolve(proto: &ProtoCreature, proto_map: &ProtoCreatureMap,
             if !creature_map.contains_key(&template_proto.id) {
                 resolve(template_proto, &proto_map, &mut creature_map);
             }
+
+            let mut new_creat = creature_map.get(&template_proto.id)
+                                            .unwrap()
+                                            .clone();
+            new_creat.name = proto.name.clone();
+            new_creat.id = proto.id.clone();
+            if let Some(texture) = proto.texture.clone() {
+                new_creat.texture = Some(texture);
+            }
+            if let Some(dig_speed) = proto.dig_speed.clone() {
+                new_creat.dig_speed = dig_speed;
+            }
+            if let Some(movement_speed) = proto.movement_speed.clone() {
+                new_creat.movement_speed = movement_speed;
+            }
+            if let Some(alt) = proto.alt.clone() {
+                new_creat.alt = alt;
+            }
+            if let Some(color) = proto.color.clone() {
+                new_creat.color = color;
+            }
+
+            creature_map.insert(new_creat.id, new_creat);
         }   
     }
 }
