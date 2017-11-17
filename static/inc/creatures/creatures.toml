@@ -2,7 +2,7 @@
 name = "default"
 id = 0
 texture = ""
-dig_speed = 30
+dig_speed = 300
 movement_speed = 30
 color = [1.0,1.0,1.0,1.0]
 alt = 0

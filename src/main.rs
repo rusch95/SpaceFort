@@ -28,9 +28,9 @@ fn main() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
 
     let map = init_map(root);
-    let ent_state = init_entities(root);
+    let (entities, creature_types) = init_entities(root);
     let mut window = init_graphics();
-    let mut game = init_game(map, ent_state);
+    let mut game = init_game(map, entities, creature_types);
     let mut events = Events::new(EventSettings::new());
 
     while let Some(e) = events.next(&mut window) {

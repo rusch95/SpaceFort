@@ -1,6 +1,7 @@
 use map::tiles::Map;
 use entities::interact::{Action, Actions, ActionType};
 use entities::entity::{Entity, Pos};
+use entities::creatures::{CreatureMap, movement_speed};
 
 use pathfinding::fringe;
 
@@ -9,18 +10,21 @@ const DIAG_DIST: i32 = (UNIT_DIST as f64 * 1.414) as i32;
 
 // TODO Fix distances to use f64 instead of int
 
-pub fn path_to(map: &Map, ent: &mut Entity, end_pos: Pos) -> Actions {
-    path(map, ent, end_pos, |&p| p == end_pos)
+pub fn path_to(map: &Map, ent: &mut Entity, creature_types: &CreatureMap, 
+               end_pos: Pos) -> Actions {
+    path(map, ent, creature_types, end_pos, |&p| p == end_pos)
 }
 
-pub fn path_next_to(map: &Map, ent: &Entity, end_pos: Pos) -> Actions {
-    path(map, ent, end_pos,
+pub fn path_next_to(map: &Map, ent: &Entity, creature_types: &CreatureMap, 
+                    end_pos: Pos) -> Actions {
+    path(map, ent, creature_types, end_pos,
          |&p| {let sucs = succ(&map, &end_pos);
                sucs.contains(&(p, UNIT_DIST)) || 
                sucs.contains(&(p, DIAG_DIST))})
 }
 
-pub fn path<F>(map: &Map, ent: &Entity, end_pos: Pos, end_det: F) -> Actions where 
+pub fn path<F>(map: &Map, ent: &Entity, creature_types: &CreatureMap, 
+               end_pos: Pos, end_det: F) -> Actions where 
     F: Fn(&Pos) -> bool {    
     let pathing_result = fringe(&ent.pos,
                          |&p| succ(&map, &p),
@@ -32,7 +36,7 @@ pub fn path<F>(map: &Map, ent: &Entity, end_pos: Pos, end_det: F) -> Actions whe
         for coord in path {
             actions.push_back(
                 Action { atype: ActionType::Move(coord),
-                         duration: ent.movement_speed() }
+                         duration: movement_speed(&ent.creature_id, creature_types) }
             );
         }
     }

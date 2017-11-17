@@ -11,12 +11,10 @@ pub type CreatureMap = HashMap<CreatureID, Creature>;
 type ProtoCreatures = Vec<ProtoCreature>;
 type ProtoCreatureMap = HashMap<String, ProtoCreature>;
 
-
 #[derive(Deserialize)]
 struct DeserializeStruct {
     pub creatures: ProtoCreatures,
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Creature {
@@ -28,7 +26,6 @@ pub struct Creature {
     pub color: [f32; 4],
     pub alt: CreatureID,
 }
-
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct ProtoCreature {
@@ -42,6 +39,11 @@ pub struct ProtoCreature {
     pub alt: Option<CreatureID>,
 }
 
+// ************************ 
+// Functions for Generating CreatureMap
+//
+// *********************** 
+//
 // TODO Genercize and dedup object, entity, and material 
 pub fn init_creatures(root: &Path) -> CreatureMap {
     // Read creatures file to str
@@ -119,3 +121,23 @@ fn resolve(proto: &ProtoCreature, proto_map: &ProtoCreatureMap,
     }
 }
 
+// *************************
+// Functions to Lookup Stuff in CreatureMap
+//
+// ************************
+
+pub fn dig_speed(creature_id: &CreatureID, creature_types: &CreatureMap) -> Ticks {
+    if let Some(creature) = creature_types.get(creature_id) {
+        creature.dig_speed
+    } else {
+        0
+    }
+}
+
+pub fn movement_speed(creature_id: &CreatureID, creature_types: &CreatureMap) -> Ticks {
+    if let Some(creature) = creature_types.get(creature_id) {
+        creature.movement_speed
+    } else {
+        0
+    }
+}
