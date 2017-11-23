@@ -1,5 +1,3 @@
-use std::mem::drop;
-
 use piston::window::WindowSettings;
 use piston::input::*;
 use graphics::*;
@@ -61,14 +59,12 @@ impl GameState {
         }
     }
 
-    pub fn update(&mut self, args: &UpdateArgs) {
+    pub fn update(&mut self, _args: &UpdateArgs) {
         self.ticks += 1;
 
         // Entity update and pathfinding
         schedule_actions(self);
         do_actions(self);
-
-        drop(args);
     }
 
     pub fn get_snap(&mut self) -> MapSnapshot {
@@ -159,22 +155,15 @@ impl Game {
             self.input.selector = Some((self.input.mouse_pos, self.input.mouse_pos))
         }
 
-        // TODO Change to dictionary mapping keys to functions
         if let Button::Keyboard(key) = button {
             let func = match key {
-                Key::Right  => Game::right,
-                Key::Left   => Game::left, 
-                Key::Down   => Game::back,
-                Key::Up     => Game::forward, 
-                Key::Comma  => Game::down,
-                Key::Period => Game::up,
+                Key::Right  | Key::L => Game::right,
+                Key::Left   | Key::H => Game::left, 
+                Key::Down   | Key::J => Game::back,
+                Key::Up     | Key::K => Game::forward, 
+                Key::Period | Key::O => Game::up,
+                Key::Comma  | Key::P => Game::down,
                 Key::D      => Game::set_digging,
-                Key::H      => Game::left,
-                Key::J      => Game::back,
-                Key::K      => Game::forward,
-                Key::L      => Game::right,
-                Key::O      => Game::up, 
-                Key::P      => Game::down, 
                 Key::Q      => Game::quit,
                 Key::Y      => Game::move_to,
                 _           => Game::null,
@@ -187,7 +176,7 @@ impl Game {
     fn move_selected_entities(&mut self, mouse_pos: WinPos) {
         let dest_tile_pos = win_pos_to_tile(mouse_pos, &self.state.ch);
 
-        for ref mut ent in &mut self.state.entities {
+        for ent in &mut self.state.entities {
             for ent_id in &self.state.selected_entities {
                 if ent.id == *ent_id {
                     ent.actions = path_to(&self.state.map, ent, 
@@ -249,8 +238,8 @@ fn draw_tiles(c: Context, gl: &mut GlGraphics,
         for x in 0..snap.xlen {
             let index = (x + y * snap.xlen) as usize;
             let tile = snap.tiles[index];
-            let xpos = X_PIXELS * (x as f64);
-            let ypos = Y_PIXELS * (y as f64);
+            let xpos = X_PIXELS * f64::from(x);
+            let ypos = Y_PIXELS * f64::from(y);
             let transform = c.transform.trans(xpos, ypos);
             let color = match map.materials.get(&tile.material) {
                 Some(material) => {
@@ -272,7 +261,7 @@ fn draw_entities(c: Context, gl: &mut GlGraphics,
         if z == ch.z &&
                (ch.x <= x) && (x <= ch.xlen) &&
                (ch.y <= y) && (y <= ch.ylen) {
-            let (winx, winy) = tile_pos_to_win(entity.pos, &ch);
+            let (winx, winy) = tile_pos_to_win(entity.pos, ch);
             let transform = c.transform.trans(winx, winy);
             rectangle(YELLOW, square, transform, gl);
         }

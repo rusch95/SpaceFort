@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["rusch <rusch@mit.edu>"]
 
 [dependencies]
+clippy = {version = "*", optional = true}
 pathfinding = "0.1"
 piston = "0.32.0"
 piston2d-graphics = "0.21.1"
@@ -13,3 +14,6 @@ regex = "0.1.41"
 serde = "1.0.11"
 serde_derive = "1.0.11"
 toml = "0.4.5"
+
+[features]
+default = []

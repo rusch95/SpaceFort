@@ -56,14 +56,14 @@ pub fn init_materials(root: &Path) -> Materials {
     let proto_materials = des_materials.materials.clone();
             
     let mut proto_map = HashMap::new();
-    for mat in proto_materials.iter() {
+    for mat in &proto_materials {
         proto_map.insert(mat.name.clone(), mat.clone());
     }
 
     let mut material_map = HashMap::new();
     // Alternatively, one could topologically sort based on dependencies
     // No current checking for circular dependencies
-    for mat in proto_materials.iter() {
+    for mat in &proto_materials {
         resolve(mat, &proto_map, &mut material_map);
     }
 
@@ -75,19 +75,19 @@ fn resolve(proto: &ProtoMaterial, proto_map: &ProtoMap, mut material_map: &mut M
     match proto.template.clone() {
         None => {
             let new_mat = Material { name:     proto.name.clone(),
-                                     id:       proto.id.clone(),
+                                     id:       proto.id,
                                      texture:   None,  // FIXME
-                                     diggable: proto.diggable.unwrap().clone(),
-                                     passable: proto.passable.unwrap().clone(),
-                                     alt:      proto.alt.unwrap().clone(),
-                                     color:    proto.color.unwrap().clone() };
+                                     diggable: proto.diggable.unwrap(),
+                                     passable: proto.passable.unwrap(),
+                                     alt:      proto.alt.unwrap(),
+                                     color:    proto.color.unwrap() };
             material_map.insert(new_mat.id, new_mat);
         },
         Some(template) => {
             let template_proto = proto_map.get(&template)
                                           .unwrap();
             if !material_map.contains_key(&template_proto.id) {
-                resolve(template_proto, &proto_map, &mut material_map);
+                resolve(template_proto, proto_map, &mut material_map);
             }
 
             // Initialize with prototype and then overwrite fields with any new field
@@ -95,20 +95,20 @@ fn resolve(proto: &ProtoMaterial, proto_map: &ProtoMap, mut material_map: &mut M
                                           .unwrap()
                                           .clone();
             new_mat.name = proto.name.clone();
-            new_mat.id = proto.id.clone();
+            new_mat.id = proto.id;
             if let Some(texture) = proto.texture.clone() {
                 new_mat.texture = Some(texture);
             }
-            if let Some(diggable) = proto.diggable.clone() {
+            if let Some(diggable) = proto.diggable {
                 new_mat.diggable = diggable;
             }
-            if let Some(passable) = proto.passable.clone() {
+            if let Some(passable) = proto.passable {
                 new_mat.passable = passable;
             }
-            if let Some(color) = proto.color.clone() {
+            if let Some(color) = proto.color {
                 new_mat.color = color;
             }
-            if let Some(alt) = proto.alt.clone() {
+            if let Some(alt) = proto.alt {
                 new_mat.alt = alt;
             }
             material_map.insert(new_mat.id, new_mat);

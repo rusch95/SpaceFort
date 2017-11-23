@@ -12,6 +12,7 @@ pub type Ticks = i32;
 pub type EntIds = Vec<Id>;
 pub type Entities = Vec<Entity>;
 
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Entity {
     pub id: Id,
@@ -53,7 +54,7 @@ pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
 
 
 pub fn do_actions(state: &mut GameState) {
-    for ent in state.entities.iter_mut() {
+    for ent in &mut state.entities {
         let pop = match ent.actions.front_mut() {
             Some(act) => {
                 if act.duration > 0 {act.duration -= 1; false}
@@ -79,9 +80,9 @@ pub fn do_actions(state: &mut GameState) {
 
 
 pub fn schedule_actions(state: &mut GameState) {
-    for ent in state.entities.iter_mut() {
-        if ent.actions.len() == 0 {
-            for task in state.tasks.iter_mut() {
+    for ent in &mut state.entities {
+        if ent.actions.is_empty() {
+            for task in &mut state.tasks {
                 if task.owner == None {
                     task.owner = Some(ent.id);
                     ent.actions = schedule_action(&state.map, ent, &state.creature_types, 
@@ -100,7 +101,7 @@ fn schedule_action(map: &Map, ent: &Entity, creature_types: &CreatureMap,
     match atype {
         ActionType::Dig(pos) => {
             let path = path_next_to(map, ent, creature_types, pos);
-            if path.len() > 0 {
+            if !path.is_empty() {
                 actions.extend(path_next_to(map, ent, creature_types, pos));
                 actions.push_back(Action{ atype: ActionType::Dig(pos), 
                                           duration: dig_speed(&ent.creature_id, creature_types) });

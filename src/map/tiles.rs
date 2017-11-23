@@ -57,9 +57,9 @@ impl Map {
                         None       => print!(" "),
                     }
                 }
-                print!("\n");
+                println!();
             }
-            print!("\n");
+            println!();
         }
     }
 
@@ -124,7 +124,7 @@ impl Map {
     pub fn diggable(&self, pos: Pos) -> bool {
         if let Some(tile) = self.get_tile(pos) {
             if let Some(material) = self.materials.get(&tile.material) {
-                material.diggable && tile.marked == false
+                material.diggable && !tile.marked
             } else {
                 false
             }
@@ -173,9 +173,9 @@ impl MapSnapshot {
                 let index = (x + y * self.xlen) as usize;
                 print!("{0}", self.tiles[index].material % 10);
             }
-            print!("\n");
+            println!();
         }
-        print!("\n");
+        println!();
     }
 }
 

@@ -3,8 +3,10 @@ use std::fs::File;
 use std::io::Read;
 use std::collections::HashMap;
 
+
 use entities::entity::Ticks;
 use toml;
+
 
 pub type CreatureID = u16;
 pub type CreatureMap = HashMap<CreatureID, Creature>;
@@ -16,6 +18,7 @@ struct DeserializeStruct {
     pub creatures: ProtoCreatures,
 }
 
+// REFACTOR Macro this bit to dedup code
 #[derive(Debug, Clone, PartialEq)]
 pub struct Creature {
     pub name: String,
@@ -60,14 +63,14 @@ pub fn init_creatures(root: &Path) -> CreatureMap {
     let proto_creatures = des_struct.creatures.clone();
             
     let mut proto_map = HashMap::new();
-    for creat in proto_creatures.iter() {
+    for creat in &proto_creatures {
         proto_map.insert(creat.name.clone(), creat.clone());
     }
 
     let mut creature_map = HashMap::new();
     // Alternatively, one could topologically sort based on dependencies
     // No current checking for circular dependencies
-    for creat in proto_creatures.iter() {
+    for creat in &proto_creatures {
         resolve(creat, &proto_map, &mut creature_map);
     }
 
@@ -80,39 +83,40 @@ fn resolve(proto: &ProtoCreature, proto_map: &ProtoCreatureMap,
         None => {
             let new_creat = Creature { 
                 name:           proto.name.clone(),
-                id:             proto.id.clone(),
+                id:             proto.id,
                 texture:        None,  // FIXME
-                dig_speed:      proto.dig_speed.unwrap().clone(),
-                movement_speed: proto.movement_speed.unwrap().clone(),
-                alt:            proto.alt.unwrap().clone(),
-                color:          proto.color.unwrap().clone() };
+                dig_speed:      proto.dig_speed.unwrap(),
+                movement_speed: proto.movement_speed.unwrap(),
+                alt:            proto.alt.unwrap(),
+                color:          proto.color.unwrap(), 
+            };
             creature_map.insert(new_creat.id, new_creat);
         },
         Some(template) => {
             let template_proto = proto_map.get(&template)
                                           .unwrap();
             if !creature_map.contains_key(&template_proto.id) {
-                resolve(template_proto, &proto_map, &mut creature_map);
+                resolve(template_proto, proto_map, &mut creature_map);
             }
 
             let mut new_creat = creature_map.get(&template_proto.id)
                                             .unwrap()
                                             .clone();
             new_creat.name = proto.name.clone();
-            new_creat.id = proto.id.clone();
+            new_creat.id = proto.id;
             if let Some(texture) = proto.texture.clone() {
                 new_creat.texture = Some(texture);
             }
-            if let Some(dig_speed) = proto.dig_speed.clone() {
+            if let Some(dig_speed) = proto.dig_speed {
                 new_creat.dig_speed = dig_speed;
             }
-            if let Some(movement_speed) = proto.movement_speed.clone() {
+            if let Some(movement_speed) = proto.movement_speed {
                 new_creat.movement_speed = movement_speed;
             }
-            if let Some(alt) = proto.alt.clone() {
+            if let Some(alt) = proto.alt {
                 new_creat.alt = alt;
             }
-            if let Some(color) = proto.color.clone() {
+            if let Some(color) = proto.color {
                 new_creat.color = color;
             }
 
