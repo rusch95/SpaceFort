@@ -1,17 +1,32 @@
-=Vital=
-Attack and die
-Creature properties from materials file
-Necromancers
-Golems
-Ents
+==============================
+0.1 Release - Most Basic Demo
+==============================
 
-=Wishlist=
+Creatures have health, can attack, and can die
+Units belong to a team
+Ambient Movement
+Refactoring
+
+==============================
+0.2 Release - Fun Demo
+==============================
+
 Macro up the toml loading
+More creatures
+Ramps and Floors as property
 Network
-Save games
+Test Suite
+Items
+Buildings
+Tileset
 
-=Nice to have=
+==============================
+0.3 Release - Actually a Game
+==============================
+
+Restore ascii to functionality
+Procedural Generation
+Render opacity
 Liquids
 Clouds
-Proper multilevel support
-    Render opacity
+Save games
