@@ -24,6 +24,7 @@ Tileset
 0.3 Release - Actually a Game
 ==============================
 
+Fix pathfinding int hack
 Restore ascii to functionality
 Procedural Generation
 Render opacity
