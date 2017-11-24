@@ -51,11 +51,11 @@ fn main() {
         }
 
         if let Some(pos) = e.mouse_cursor_args() {
-            game.input.move_cursor(pos);
+            game.move_cursor(pos);
         }
 
         if let Some(button) = e.release_args() {
-            game.input.release_button(&mut game.state, button);
+            game.release_button(button);
         }
 
         if let Some(r) = e.render_args() {
@@ -63,7 +63,7 @@ fn main() {
         }
 
         if let Some(u) = e.update_args() {
-            game.state.update(&u);
+            game.update(&u);
         }
 
         if game.done {

@@ -2,8 +2,8 @@
 name = "default"
 id = 0
 texture = ""
-dig_speed = 300
-movement_speed = 30
+dig_speed = 0
+movement_speed = 0
 color = [1.0,1.0,1.0,1.0]
 alt = 0
 
@@ -11,6 +11,8 @@ alt = 0
 name = "dwarf"
 id = 1
 template = "default"
+dig_speed = 200
+movement_speed = 0
 color = [0.9,0.1,0.1,1.0]
 
 [[creatures]]

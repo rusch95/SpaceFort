@@ -4,7 +4,7 @@ use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
 use entities::creatures::{CreatureID, CreatureMap, init_creatures, dig_speed};
 use io::base::Id;
-use game::base::GameState;
+use game::base::{GameState, PlayerState};
 use map::tiles::Map;
 
 pub type Pos = (i32, i32, i32);
@@ -79,13 +79,13 @@ pub fn do_actions(state: &mut GameState) {
 }
 
 
-pub fn schedule_actions(state: &mut GameState) {
-    for ent in &mut state.entities {
+pub fn schedule_actions(g_state: &mut GameState, p_state: &mut PlayerState) {
+    for ent in &mut g_state.entities {
         if ent.actions.is_empty() {
-            for task in &mut state.tasks {
+            for task in &mut p_state.tasks {
                 if task.owner == None {
                     task.owner = Some(ent.id);
-                    ent.actions = schedule_action(&state.map, ent, &state.creature_types, 
+                    ent.actions = schedule_action(&g_state.map, ent, &g_state.creature_types, 
                                                   task.atype);
                     break;
                 }

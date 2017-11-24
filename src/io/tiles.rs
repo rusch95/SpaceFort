@@ -10,7 +10,6 @@ use io::utils::*;
 use game::base::{Game, GameState};
 use map::tiles::{Map, MapSnapshot};
 use entities::entity::Entities;
-use entities::interact::{select_entities, add_dig_tasks};
 
 
 pub struct Input {
@@ -29,34 +28,6 @@ impl Input {
             selector: None,
             sel_state: SelState::Ents,
             selector_start: None,
-        }
-    }
-
-    pub fn release_button(&mut self, state: &mut GameState, button: Button) {
-        if button == Button::Mouse(MouseButton::Left) {
-            if let Some(selector) = self.selector {   
-                let tiles_selector = win_to_tile_selector(selector, &state.ch);
-
-                if self.sel_state == SelState::Ents {
-                    state.selected_entities = select_entities(&state.entities, 
-                                                              tiles_selector);
-                } else {
-                    add_dig_tasks(&mut state.tasks, &mut state.map, tiles_selector);
-                    self.sel_state = SelState::Ents;
-                }
-
-                self.selector_start = None;
-                self.selector = None;
-            }
-        }
-    }
-
-
-    pub fn move_cursor(&mut self, pos: [f64; 2]) {
-        self.mouse_pos = (pos[0], pos[1]);
-
-        if let Some(selector_pos) = self.selector_start {
-            self.selector = Some((selector_pos, self.mouse_pos));
         }
     }
 }
@@ -126,10 +97,10 @@ pub fn render(game: &mut Game, args: &RenderArgs) {
     // TODO Keep track of FPS 
     // TODO Dynamically resize window bounds
 
-    let snap = game.state.get_snap();
-    let entities = &game.state.entities;
-    let ch = &game.state.ch;
-    let map = &game.state.map;
+    let snap = game.get_snap();
+    let entities = &game.g_state.entities;
+    let ch = &game.p_state.ch;
+    let map = &game.g_state.map;
     let selector = game.input.selector;
 
     game.gl.draw(args.viewport(), |c, gl| {
