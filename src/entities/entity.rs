@@ -4,7 +4,7 @@ use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
 use entities::creatures::{CreatureID, CreatureMap, init_creatures, dig_speed};
 use io::base::Id;
-use io::tiles::GameState;
+use game::base::GameState;
 use map::tiles::Map;
 
 pub type Pos = (i32, i32, i32);

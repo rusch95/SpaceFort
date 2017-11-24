@@ -11,6 +11,7 @@ extern crate serde_derive;
 extern crate toml;
 
 mod entities;
+mod game;
 mod gen;
 mod io;
 mod map;
@@ -25,7 +26,8 @@ use piston::event_loop::*;
 use piston::input::*;
 
 // Local imports
-use io::tiles::{ init_graphics, init_game };
+use io::tiles::init_graphics;
+use game::base::init_game;
 use map::tiles::init_map;
 use entities::entity::init_entities;
 
