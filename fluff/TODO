@@ -4,13 +4,13 @@
 
 Creatures have health, can attack, and can die
 Units belong to a team
-Ambient Movement
 Refactoring
 
 ==============================
 0.2 Release - Fun Demo
 ==============================
 
+Ambient Movement
 Macro up the toml loading
 More creatures
 Ramps and Floors as property

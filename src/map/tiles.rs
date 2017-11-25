@@ -198,7 +198,7 @@ pub fn handle_to_snapshot(handle: &CameraHandle, map: &Map) -> MapSnapshot {
 }
 
 pub fn init_map(root: &Path) -> Map {
-    let test_path = root.join("static/inc/maps/smol_map.sfm");
+    let test_path = root.join("static/inc/maps/arena.sfm");
     let path_str = test_path
                    .to_str()
                    .expect("Unicode decode error");

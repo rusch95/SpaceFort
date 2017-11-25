@@ -2,23 +2,46 @@
 name = "default"
 id = 0
 texture = ""
-dig_speed = 0
-movement_speed = 0
+health = 0
+stregth = 0
+attacks = []
+dig_speed = 100
+movement_speed = 100
 color = [1.0,1.0,1.0,1.0]
 alt = 0
 
 [[creatures]]
+name = "humanoid"
+id = 100
+template = "default"
+health = 100
+strength = 10
+attacks = ["punch", "bite"]
+dig_speed = 200
+movement_speed = 20
+color = [0.9,0.1,0.1,1.0]
+
+[[creatures]]
+name = "quadraped"
+id = 101
+template = "default"
+health = 50
+strength = 5
+attacks = ["bite"]
+dig_speed = 100
+movement_speed = 15
+color = [0.9,0.1,0.1,1.0]
+
+[[creatures]]
 name = "dwarf"
 id = 1
-template = "default"
-dig_speed = 200
-movement_speed = 0
+template = "humanoid"
 color = [0.9,0.1,0.1,1.0]
 
 [[creatures]]
 name = "dog"
 id = 2
-template = "default"
+template = "quadraped"
 color = [0.1,0.9,0.1,1.0]
 
 [[creatures]]
