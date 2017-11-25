@@ -62,9 +62,10 @@ fn draw_entities(c: Context, gl: &mut GlGraphics,
 
     for entity in entities.iter() {
         let (x, y, z) = entity.pos;
+        println!("x: {}, y:{}, z: {}", x, y, z);
         if z == ch.z &&
-               (ch.x <= x) && (x <= ch.xlen) &&
-               (ch.y <= y) && (y <= ch.ylen) {
+               (ch.x <= x) && (x <= ch.x + ch.xlen) &&
+               (ch.y <= y) && (y <= ch.y + ch.ylen) {
             let (winx, winy) = tile_pos_to_win(entity.pos, ch);
             let transform = c.transform.trans(winx, winy);
             rectangle(YELLOW, square, transform, gl);
