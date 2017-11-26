@@ -3,32 +3,33 @@ use std::path::Path;
 use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
 use entities::creatures::{CreatureID, CreatureMap, init_creatures, dig_speed};
-use io::base::Id;
-use game::base::{GameState, PlayerState};
+use game::base::{EntID, GameState, PlayerState, TeamID};
 use map::tiles::Map;
 
 pub type Pos = (i32, i32, i32);
 pub type Ticks = i32;
-pub type EntIds = Vec<Id>;
+pub type EntIds = Vec<EntID>;
 pub type Entities = Vec<Entity>;
 
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Entity {
-    pub id: Id,
+    pub id: EntID,
     pub creature_id: CreatureID,
     pub pos: Pos,
+    pub team_id: TeamID,
     pub actions: Actions,
     pub goal: Option<ActionType>,
 }
 
 
 impl Entity {
-    fn new(id: Id, pos: Pos) -> Entity {
+    fn new(id: EntID, pos: Pos) -> Entity {
         Entity { 
             id: id, 
             creature_id: 1,
             pos: pos, 
+            team_id: None,
             actions: Actions::new(), 
             goal: None 
         }

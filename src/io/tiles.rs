@@ -7,7 +7,7 @@ use opengl_graphics::GlGraphics;
 use io::base::*;
 use io::constants::*;
 use io::utils::*;
-use game::base::{Game, GameState};
+use game::base::Game;
 use map::tiles::{Map, MapSnapshot};
 use entities::entity::Entities;
 
@@ -62,7 +62,6 @@ fn draw_entities(c: Context, gl: &mut GlGraphics,
 
     for entity in entities.iter() {
         let (x, y, z) = entity.pos;
-        println!("x: {}, y:{}, z: {}", x, y, z);
         if z == ch.z &&
                (ch.x <= x) && (x <= ch.x + ch.xlen) &&
                (ch.y <= y) && (y <= ch.y + ch.ylen) {

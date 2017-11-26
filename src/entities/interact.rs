@@ -2,7 +2,8 @@ use std::collections::VecDeque;
 use std::cmp::{min, max};
 use map::tiles::Map;
 use entities::entity::{Entities, EntIds, Pos, Ticks};
-use io::base::{TilesSelector, Id};
+use game::base::EntID;
+use io::base::TilesSelector;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Action {
@@ -15,7 +16,7 @@ pub enum ActionType {
     Move(Pos),
     Dig(Pos),
     #[allow(dead_code)]
-    Attack(Id),
+    Attack(EntID),
     #[allow(dead_code)]
     Wait,
 }
@@ -23,7 +24,7 @@ pub enum ActionType {
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Task {
     pub atype: ActionType,
-    pub owner: Option<Id>,
+    pub owner: Option<EntID>,
 }
 
 impl Task {
