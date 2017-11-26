@@ -41,9 +41,9 @@ pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
     let creature_types = init_creatures(root);
     let mut ents = Entities::new();
 
-    let entity = Entity::new(-1, (0, 0, 1));
-    let entity2 = Entity::new(-2, (3, 3, 1));
-    let entity3 = Entity::new(-3, (4, 4, 1));
+    let entity = Entity::new(-1, (7, 7, 0));
+    let entity2 = Entity::new(-2, (3, 3, 0));
+    let entity3 = Entity::new(-3, (4, 4, 0));
 
     ents.push(entity);
     ents.push(entity2);
