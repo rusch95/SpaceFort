@@ -30,3 +30,10 @@
 * Liquids
 * Clouds
 * Save games
+
+
+Bugs
+=======
+
+* Can't run release mode on windows because of OpenGL issue
+

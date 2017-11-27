@@ -7,7 +7,7 @@ use opengl_graphics::GlGraphics;
 use io::base::*;
 use io::constants::*;
 use io::utils::*;
-use game::base::Game;
+use game::base::{Game, TeamID};
 use map::tiles::{Map, MapSnapshot};
 use entities::entity::Entities;
 
@@ -58,19 +58,34 @@ fn draw_tiles(c: Context, gl: &mut GlGraphics,
 
 fn draw_entities(c: Context, gl: &mut GlGraphics, 
                  ch: &CameraHandle, entities: &Entities) {
-    let square = rectangle::square(0.0, 0.0, X_PIXELS);
+    // Scale entities slightly smaller than a square for now
+    let inner_square = rectangle::square(0.0, 0.0, X_PIXELS * 0.85);
+    let outer_square = rectangle::square(0.0, 0.0, X_PIXELS * 1.0);
 
-    for entity in entities.iter() {
-        let (x, y, z) = entity.pos;
+    for ent in entities.iter() {
+        let (x, y, z) = ent.pos;
         if z == ch.z &&
                (ch.x <= x) && (x <= ch.x + ch.xlen) &&
                (ch.y <= y) && (y <= ch.y + ch.ylen) {
-            let (winx, winy) = tile_pos_to_win(entity.pos, ch);
-            let transform = c.transform.trans(winx, winy);
-            rectangle(YELLOW, square, transform, gl);
+            let (winx, winy) = tile_pos_to_win(ent.pos, ch);
+            let inner_transform = c.transform.trans(winx + X_PIXELS * 0.075, 
+                                                    winy + X_PIXELS * 0.075);
+            let outer_transform = c.transform.trans(winx, winy);
+            rectangle(team_color(ent.team_id), outer_square, outer_transform, gl);
+            rectangle(YELLOW, inner_square, inner_transform, gl);
         }
     }
 }
+
+
+fn team_color(team_id: TeamID) -> Color {
+    match team_id {
+        Some(1) => BLUE,
+        Some(2) => RED,
+        _       => WHITE,
+    }
+}
+        
 
 
 fn draw_selector(c: Context, gl: &mut GlGraphics, selector: Option<Selector>) {

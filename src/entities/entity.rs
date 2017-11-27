@@ -3,7 +3,7 @@ use std::path::Path;
 use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
 use entities::creatures::{CreatureID, CreatureMap, init_creatures, dig_speed};
-use game::base::{EntID, GameState, PlayerState, TeamID};
+use game::base::{EntID, GameState, PlayerState, PlayerID, TeamID};
 use map::tiles::Map;
 
 pub type Pos = (i32, i32, i32);
@@ -11,6 +11,7 @@ pub type Ticks = i32;
 pub type EntIds = Vec<EntID>;
 pub type Entities = Vec<Entity>;
 
+pub type Health = i32;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Entity {
@@ -20,18 +21,20 @@ pub struct Entity {
     pub team_id: TeamID,
     pub actions: Actions,
     pub goal: Option<ActionType>,
+    pub health: Health,
 }
 
 
 impl Entity {
-    fn new(id: EntID, pos: Pos) -> Entity {
+    fn new(id: EntID, pos: Pos, team_id: PlayerID) -> Entity {
         Entity { 
             id: id, 
             creature_id: 1,
             pos: pos, 
-            team_id: Some(1),
+            team_id: Some(team_id),
             actions: Actions::new(), 
-            goal: None 
+            goal: None,
+            health: 100,
         }
     }
 }
@@ -42,13 +45,19 @@ pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
     let creature_types = init_creatures(root);
     let mut ents = Entities::new();
 
-    let entity = Entity::new(-1, (7, 7, 0));
-    let entity2 = Entity::new(-2, (3, 3, 0));
-    let entity3 = Entity::new(-3, (4, 4, 0));
+    let entity1 = Entity::new(-1, (7, 7, 0), 1);
+    let entity2 = Entity::new(-2, (3, 3, 0), 1);
+    let entity3 = Entity::new(-3, (4, 4, 0), 1);
+    let entity4 = Entity::new(-4, (80, 7, 0), 2);
+    let entity5 = Entity::new(-5, (83, 3, 0), 2);
+    let entity6 = Entity::new(-6, (85, 4, 0), 2);
 
-    ents.push(entity);
+    ents.push(entity1);
     ents.push(entity2);
     ents.push(entity3);
+    ents.push(entity4);
+    ents.push(entity5);
+    ents.push(entity6);
         
     (ents, creature_types)
 }
