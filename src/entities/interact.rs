@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use std::cmp::{min, max};
 use map::tiles::Map;
 use entities::entity::{Entities, EntIds, Pos, Ticks};
-use game::base::EntID;
+use game::base::{EntID, PlayerState};
 use io::base::TilesSelector;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -36,13 +36,16 @@ impl Task {
 pub type Actions = VecDeque<Action>;
 pub type Tasks = Vec<Task>;
 
-pub fn select_entities(ents: &Entities, selector: TilesSelector) -> EntIds {
+pub fn select_entities(ents: &Entities, p_state: &PlayerState, 
+                       selector: TilesSelector) -> EntIds {
     let (s1, s2) = rotate_selector(selector);
 
     let mut ent_ids = EntIds::new();
     for ent in ents {
-        if s1 <= ent.pos && ent.pos <= s2 {
-            ent_ids.push(ent.id);
+        if let Some(team_id) = ent.team_id {
+            if team_id == p_state.player_id && s1 <= ent.pos && ent.pos <= s2 {
+                ent_ids.push(ent.id);
+            }
         }
     }
     ent_ids

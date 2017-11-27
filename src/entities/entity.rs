@@ -29,7 +29,7 @@ impl Entity {
             id: id, 
             creature_id: 1,
             pos: pos, 
-            team_id: None,
+            team_id: Some(1),
             actions: Actions::new(), 
             goal: None 
         }

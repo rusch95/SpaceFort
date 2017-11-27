@@ -14,7 +14,7 @@ use entities::pathfind::path_to;
 
 
 pub type PlayerID = u16;
-pub type TeamID = Option<u16>;
+pub type TeamID = Option<PlayerID>;
 pub type EntID = i64;
 
 
@@ -39,7 +39,7 @@ pub struct GameState {
 
 
 pub struct PlayerState {
-    pub id: PlayerID,
+    pub player_id: PlayerID,
     pub ch: CameraHandle,
     pub selected_entities: Vec<EntID>,
     pub tasks: Tasks,
@@ -47,9 +47,9 @@ pub struct PlayerState {
 
 
 impl PlayerState {
-    pub fn new(id: PlayerID) -> PlayerState {
+    pub fn new(player_id: PlayerID) -> PlayerState {
         PlayerState {
-            id: id,
+            player_id: player_id,
             ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
             selected_entities: Vec::new(),
             tasks: Vec::new(),
@@ -155,7 +155,7 @@ impl Game {
 
                 if self.input.sel_state == SelState::Ents {
                     self.p_state.selected_entities = 
-                        select_entities(&self.g_state.entities, tiles_selector);
+                        select_entities(&self.g_state.entities, &self.p_state, tiles_selector);
                 } else {
                     add_dig_tasks(
                         &mut self.p_state.tasks, 
