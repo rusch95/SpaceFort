@@ -8,9 +8,9 @@ use io::utils::*;
 use io::tiles::{Input, render};
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
 use entities::creatures::CreatureMap;
-use entities::entity::{Entities, Ticks, do_actions, schedule_actions};
-use entities::interact::{Tasks, select_entities, add_dig_tasks};
-use entities::pathfind::path_to;
+use entities::entity::{Entity, Entities, Ticks, do_actions, resolve_dead, schedule_actions};
+use entities::interact::{Action, Tasks, select_entities, select_bad_entities, add_dig_tasks};
+use entities::pathfind::{path_to, path_next_to};
 
 
 pub type PlayerID = u16;
@@ -112,6 +112,10 @@ impl Game {
         self.input.sel_state = SelState::Digging;
     }
 
+    pub fn attack_with_selected(&mut self) {
+        self.input.sel_state = SelState::Attack;
+    }
+
     pub fn move_to(&mut self) {
         let mouse_pos = self.input.mouse_pos;
         self.move_selected_entities(mouse_pos);
@@ -133,9 +137,10 @@ impl Game {
                 Key::Up     | Key::K => Game::forward, 
                 Key::Period | Key::O => Game::up,
                 Key::Comma  | Key::P => Game::down,
-                Key::A      => Game::swap_state,
+                Key::A      => Game::attack_with_selected,
                 Key::D      => Game::set_digging,
                 Key::Q      => Game::quit,
+                Key::S      => Game::swap_state,
                 Key::Y      => Game::move_to,
                 _           => Game::null,
             };
@@ -153,16 +158,25 @@ impl Game {
             if let Some(selector) = self.input.selector {   
                 let tiles_selector = win_to_tile_selector(selector, &self.p_state.ch);
 
-                if self.input.sel_state == SelState::Ents {
-                    self.p_state.selected_entities = 
-                        select_entities(&self.g_state.entities, &self.p_state, tiles_selector);
-                } else {
-                    add_dig_tasks(
-                        &mut self.p_state.tasks, 
-                        &mut self.g_state.map, 
-                        tiles_selector
-                    );
-                    self.input.sel_state = SelState::Ents;
+                match self.input.sel_state {
+                    SelState::Ents => {
+                        self.p_state.selected_entities = 
+                            select_entities(
+                                &self.g_state.entities, 
+                                &self.p_state,                                   
+                                tiles_selector);
+                    },
+                    SelState::Digging  => {
+                        add_dig_tasks(
+                            &mut self.p_state.tasks, 
+                            &mut self.g_state.map, 
+                            tiles_selector);
+                        self.input.sel_state = SelState::Ents;
+                    },
+                    SelState::Attack => {
+                        self.add_attack_goal(tiles_selector);
+                        self.input.sel_state = SelState::Ents;
+                    }
                 }
 
                 self.input.selector_start = None;
@@ -186,6 +200,33 @@ impl Game {
         self.p_state.selected_entities.clear();
     }
 
+    pub fn add_attack_goal(&mut self, tiles_selector: TilesSelector) {
+        let mut targets = select_bad_entities(
+                              &self.g_state.entities, 
+                              &self.p_state,                                   
+                              tiles_selector);
+        
+        let team_id = Some(self.p_state.player_id);
+        let (mut team_ents, mut else_ents): (Vec<&mut Entity>, Vec<&mut Entity>) = 
+            self.g_state.entities.iter_mut()
+                                 .partition( |ent| ent.team_id == team_id);
+                                                         
+        if let Some(target_id) = targets.pop() {
+            if let Some(mut target) = else_ents.iter_mut()
+                                               .find(|ref ent| (*ent).id == target_id) {
+                for ent_id in &self.p_state.selected_entities {
+                    if let Some(mut ent) = team_ents.iter_mut()
+                                                    .find(|ref ent| (*ent).id == *ent_id) {
+                        ent.actions = path_next_to(&self.g_state.map, &mut ent,
+                                                   &self.g_state.creature_types,
+                                                   target.pos);
+                        ent.actions.push_back(Action::attack(target_id));
+                    } 
+                }
+            }
+        }
+    }
+
     pub fn move_cursor(&mut self, pos: [f64; 2]) {
         self.input.mouse_pos = (pos[0], pos[1]);
 
@@ -204,7 +245,6 @@ impl Game {
     }
 }
 
-
 impl GameState {
     // Contains all state corresponding to a running game
     pub fn new(map: Map, entities: Entities, creature_types: CreatureMap) -> GameState {
@@ -222,6 +262,7 @@ impl GameState {
 
         // Entity update and pathfinding
         do_actions(self);
+        resolve_dead(self);
     }
 
     #[allow(dead_code)]

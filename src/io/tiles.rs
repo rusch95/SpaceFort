@@ -72,7 +72,11 @@ fn draw_entities(c: Context, gl: &mut GlGraphics,
                                                     winy + X_PIXELS * 0.075);
             let outer_transform = c.transform.trans(winx, winy);
             rectangle(team_color(ent.team_id), outer_square, outer_transform, gl);
-            rectangle(YELLOW, inner_square, inner_transform, gl);
+            if ent.alive {
+                rectangle(YELLOW, inner_square, inner_transform, gl);
+            } else {
+                rectangle(BLACK, inner_square, inner_transform, gl);
+            }
         }
     }
 }

@@ -11,11 +11,16 @@ pub struct Action {
     pub duration: Ticks
 }
 
+impl Action {
+    pub fn attack(ent_id: EntID) -> Action {
+        Action { atype: ActionType::Attack(ent_id), duration: 10 }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ActionType {
     Move(Pos),
     Dig(Pos),
-    #[allow(dead_code)]
     Attack(EntID),
     #[allow(dead_code)]
     Wait,
@@ -36,6 +41,7 @@ impl Task {
 pub type Actions = VecDeque<Action>;
 pub type Tasks = Vec<Task>;
 
+// TODO Refactor into having a filter Predicate supplied
 pub fn select_entities(ents: &Entities, p_state: &PlayerState, 
                        selector: TilesSelector) -> EntIds {
     let (s1, s2) = rotate_selector(selector);
@@ -44,6 +50,21 @@ pub fn select_entities(ents: &Entities, p_state: &PlayerState,
     for ent in ents {
         if let Some(team_id) = ent.team_id {
             if team_id == p_state.player_id && s1 <= ent.pos && ent.pos <= s2 {
+                ent_ids.push(ent.id);
+            }
+        }
+    }
+    ent_ids
+}
+
+pub fn select_bad_entities(ents: &Entities, p_state: &PlayerState, 
+                           selector: TilesSelector) -> EntIds {
+    let (s1, s2) = rotate_selector(selector);
+
+    let mut ent_ids = EntIds::new();
+    for ent in ents {
+        if let Some(team_id) = ent.team_id {
+            if team_id != p_state.player_id && s1 <= ent.pos && ent.pos <= s2 {
                 ent_ids.push(ent.id);
             }
         }

@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::mem;
 
 use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
@@ -22,6 +23,7 @@ pub struct Entity {
     pub actions: Actions,
     pub goal: Option<ActionType>,
     pub health: Health,
+    pub alive: bool,
 }
 
 
@@ -35,6 +37,7 @@ impl Entity {
             actions: Actions::new(), 
             goal: None,
             health: 100,
+            alive: true,
         }
     }
 }
@@ -63,9 +66,31 @@ pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
 }
 
 
-pub fn do_actions(state: &mut GameState) {
-    for ent in &mut state.entities {
-        let pop = match ent.actions.front_mut() {
+pub fn resolve_dead(g_state: &mut GameState) {
+    // For now just mark dead as not having a team
+    // Will turn the dead into items in future iterations
+
+    for ent in &mut g_state.entities {
+        if ent.alive == false {
+            ent.team_id = None;
+        }
+    }
+}
+
+
+pub fn do_actions(g_state: &mut GameState) {
+    let ent_len = g_state.entities.len();
+    let mut temp_vec = Actions::new();
+    for i in 0..g_state.entities.len() {
+        let (front_ents, _back_ents) = g_state.entities.split_at_mut(i);
+        let (_ent, back_ents) = _back_ents.split_at_mut(1);
+        let ent = &mut _ent[0];
+        assert_eq!(front_ents.len() + 1 + back_ents.len(), ent_len);
+
+        // Swap ent actions out for a null vec to make borrow checker
+        // happy while we do things when ent
+        mem::swap(&mut ent.actions, &mut temp_vec);
+        let pop = match temp_vec.front_mut() {
             Some(act) => {
                 if act.duration > 0 {act.duration -= 1; false}
                 else {
@@ -74,19 +99,43 @@ pub fn do_actions(state: &mut GameState) {
                             ent.pos = pos;
                         },
                         ActionType::Dig(pos) => {
-                            state.map.dig(pos)
+                            g_state.map.dig(pos)
+                        },
+                        ActionType::Attack(ent_id) => {
+                            attack(ent, ent_id, front_ents, back_ents)
                         },
                         _ => {},
                     };
+
                     true
                 }
             }
             None => (false),
         };
+        mem::swap(&mut ent.actions, &mut temp_vec);
 
         if pop {ent.actions.pop_front();};
     };
 }
+
+
+pub fn attack(attacker: &mut Entity, defender_id: EntID,
+              left_ents: &mut [Entity], right_ents: &mut [Entity]) {
+    if let Some(defender) = left_ents.iter_mut()
+                                     .find(|ref ent| ent.id == defender_id) {
+        defender.health -= 40;
+        if defender.health < 0 {
+            defender.alive = false;
+        }
+    } else if let Some(defender) = right_ents.iter_mut()
+                                      .find(|ref ent| ent.id == defender_id) {
+        defender.health -= 40;
+        if defender.health < 0 {
+            defender.alive = false;
+        }
+    }
+}
+
 
 
 pub fn schedule_actions(g_state: &mut GameState, p_state: &mut PlayerState) {

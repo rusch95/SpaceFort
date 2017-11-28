@@ -5,6 +5,7 @@ use entities::entity::Pos;
 pub enum SelState {
     Ents,
     Digging,
+    Attack,
 }
 
 
@@ -20,3 +21,4 @@ pub struct CameraHandle {
 pub type WinPos = (f64, f64);
 pub type Selector = (WinPos, WinPos);
 pub type TilesSelector = (Pos, Pos);
+

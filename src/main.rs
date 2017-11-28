@@ -6,6 +6,7 @@ extern crate graphics;
 extern crate opengl_graphics;
 extern crate pathfinding;
 extern crate piston;
+extern crate rand;
 #[macro_use]
 extern crate serde_derive;
 extern crate toml;

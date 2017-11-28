@@ -1,9 +1,9 @@
 0.1 Release - Most Basic Demo
 ==============================
 
-* Creatures have health, can attack, and can die
+* ~~Creatures have health, can attack, and can die~~
 * ~~Units belong to a team~~
-* Refactoring
+* ~~Refactoring~~
 
 
 0.2 Release - Fun Demo
@@ -30,6 +30,12 @@
 * Liquids
 * Clouds
 * Save games
+
+
+Feature Stack
+=================
+
+* Add momentum changing cost to pathfinding
 
 
 Bugs

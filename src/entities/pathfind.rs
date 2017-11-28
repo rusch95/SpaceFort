@@ -57,7 +57,8 @@ fn succ(map: &Map, pos: &Pos) -> Vec<(Pos, i32)> {
     let mut successors = Vec::new();
     for i in &[-1, 0, 1] {
         for j in &[-1, 0, 1] {
-            let cost = if *i == 0 || *j == 0 {UNIT_DIST} else {DIAG_DIST};
+            // TODO Add variance to step cost
+            let cost = (if *i == 0 || *j == 0 {UNIT_DIST} else {DIAG_DIST});
             // Shadow X and Y with adjacent coords
             let (x, y) = (x + *i, y + *j);
             if map.passable((x, y, z)) {
