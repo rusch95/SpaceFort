@@ -9,6 +9,7 @@ use io::constants::*;
 use io::utils::*;
 use game::base::{Game, TeamID};
 use map::tiles::{Map, MapSnapshot};
+use entities::creatures::{CreatureMap, get_color};
 use entities::entity::Entities;
 
 
@@ -57,7 +58,8 @@ fn draw_tiles(c: Context, gl: &mut GlGraphics,
 
 
 fn draw_entities(c: Context, gl: &mut GlGraphics, 
-                 ch: &CameraHandle, entities: &Entities) {
+                 ch: &CameraHandle, entities: &Entities,
+                 creature_types: &CreatureMap) {
     // Scale entities slightly smaller than a square for now
     let inner_square = rectangle::square(0.0, 0.0, X_PIXELS * 0.85);
     let outer_square = rectangle::square(0.0, 0.0, X_PIXELS * 1.0);
@@ -73,7 +75,8 @@ fn draw_entities(c: Context, gl: &mut GlGraphics,
             let outer_transform = c.transform.trans(winx, winy);
             rectangle(team_color(ent.team_id), outer_square, outer_transform, gl);
             if ent.alive {
-                rectangle(YELLOW, inner_square, inner_transform, gl);
+                let color = get_color(&ent.creature_id, creature_types);
+                rectangle(color, inner_square, inner_transform, gl);
             } else {
                 rectangle(BLACK, inner_square, inner_transform, gl);
             }
@@ -121,13 +124,14 @@ pub fn render(game: &mut Game, args: &RenderArgs) {
     let ch = &game.p_state.ch;
     let map = &game.g_state.map;
     let selector = game.input.selector;
+    let creature_types = &game.g_state.creature_types;
 
     game.gl.draw(args.viewport(), |c, gl| {
         // Clear the screen.
         clear(BLACK, gl);
 
         draw_tiles(c, gl, &snap, map);
-        draw_entities(c, gl, ch, entities);
+        draw_entities(c, gl, ch, entities, creature_types);
         draw_selector(c, gl, selector);
     });
 }

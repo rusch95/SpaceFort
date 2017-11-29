@@ -28,10 +28,10 @@ pub struct Entity {
 
 
 impl Entity {
-    fn new(id: EntID, pos: Pos, team_id: PlayerID) -> Entity {
+    fn new(id: EntID, creature_id: CreatureID, pos: Pos, team_id: PlayerID) -> Entity {
         Entity { 
             id: id, 
-            creature_id: 1,
+            creature_id: creature_id,
             pos: pos, 
             team_id: Some(team_id),
             actions: Actions::new(), 
@@ -48,12 +48,12 @@ pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
     let creature_types = init_creatures(root);
     let mut ents = Entities::new();
 
-    let entity1 = Entity::new(-1, (7, 7, 0), 1);
-    let entity2 = Entity::new(-2, (3, 3, 0), 1);
-    let entity3 = Entity::new(-3, (4, 4, 0), 1);
-    let entity4 = Entity::new(-4, (80, 7, 0), 2);
-    let entity5 = Entity::new(-5, (83, 3, 0), 2);
-    let entity6 = Entity::new(-6, (85, 4, 0), 2);
+    let entity1 = Entity::new(-1, 1, (7, 7, 0), 1);
+    let entity2 = Entity::new(-2, 1, (3, 3, 0), 1);
+    let entity3 = Entity::new(-3, 1, (4, 4, 0), 1);
+    let entity4 = Entity::new(-4, 2, (80, 7, 0), 2);
+    let entity5 = Entity::new(-5, 2, (83, 3, 0), 2);
+    let entity6 = Entity::new(-6, 2, (85, 4, 0), 2);
 
     ents.push(entity1);
     ents.push(entity2);

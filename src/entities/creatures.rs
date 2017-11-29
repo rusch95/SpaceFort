@@ -3,10 +3,9 @@ use std::fs::File;
 use std::io::Read;
 use std::collections::HashMap;
 
-
+use io::constants::*;
 use entities::entity::Ticks;
 use toml;
-
 
 pub type CreatureID = u16;
 pub type CreatureMap = HashMap<CreatureID, Creature>;
@@ -143,5 +142,13 @@ pub fn movement_speed(creature_id: &CreatureID, creature_types: &CreatureMap) ->
         creature.movement_speed
     } else {
         0
+    }
+}
+
+pub fn get_color(creature_id: &CreatureID, creature_types: &CreatureMap) -> Color {
+    if let Some(creature) = creature_types.get(creature_id) {
+        creature.color
+    } else {
+        WHITE
     }
 }
