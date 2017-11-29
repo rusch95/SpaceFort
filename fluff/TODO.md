@@ -9,33 +9,37 @@
 0.2 Release - Fun Demo
 ==============================
 
-* Ambient Movement
-* Macro up the toml loading
-* More creatures
-* Ramps and Floors as property
-* Network
-* Test Suite
-* Items
-* Buildings
 * Tileset
+* Ramps and Floors as property
+* Ambient Movement
+* More creatures
+* Refactor/Extend, esp. attacking, actions, and goals
+* Polish Selection UI
+* Test Suite
+* Network
 
 
 0.3 Release - Actually a Game
 ==============================
 
+* Start Menu
+* Items
+* Buildings
+* Macro up the toml loading
 * Fix pathfinding int hack
 * Restore ascii to functionality
-* Procedural Generation
-* Render opacity
-* Liquids
-* Clouds
-* Save games
+* Early Procedural Generation
 
 
 Feature Stack
 =================
 
 * Add momentum changing cost to pathfinding
+* Physics
+* Liquids
+* Clouds
+* Save games
+* Render opacity
 
 
 Bugs
