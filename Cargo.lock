@@ -987,7 +987,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "spacefort"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "clippy 0.0.174 (registry+https://github.com/rust-lang/crates.io-index)",
  "pathfinding 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)",
