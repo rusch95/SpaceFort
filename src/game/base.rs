@@ -239,7 +239,7 @@ impl Game {
         handle_to_snapshot(&self.p_state.ch, &self.g_state.map)
     }
 
-    pub fn update(&mut self, _args: &UpdateArgs) {
+    pub fn update(&mut self) {
         self.g_state.update();
         schedule_actions(&mut self.g_state, &mut self.p_state);
     }
