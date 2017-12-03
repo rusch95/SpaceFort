@@ -8,7 +8,7 @@ use glutin_window::GlutinWindow as Window;
 use io::base::*;
 use io::constants::*;
 use io::utils::*;
-use io::tiles::{Input, render, init_graphics};
+use io::tiles::{render, init_graphics};
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
 use entities::creatures::CreatureMap;
 use entities::entity::{Entity, Entities, Ticks, do_actions, resolve_dead, schedule_actions};
@@ -42,11 +42,15 @@ pub struct PlayerState {
     pub window: Window,
     pub events: Events,
     pub gl: GlGraphics,
-    pub input: Input,
 
     pub ch: CameraHandle,
     pub selected_entities: Vec<EntID>,
     pub tasks: Tasks,
+
+    pub mouse_pos: WinPos,
+    pub selector: Option<Selector>,
+    pub selector_start: Option<WinPos>, 
+    pub sel_state: SelState,
 }
 
 impl PlayerState {
@@ -60,11 +64,15 @@ impl PlayerState {
             window: init_graphics(),
             events: events,
             gl: GlGraphics::new(OPEN_GL_VERSION),
-            input: Input::new(),
 
             ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
             selected_entities: Vec::new(),
             tasks: Vec::new(),
+
+            mouse_pos: (0.0, 0.0),
+            selector: None,
+            sel_state: SelState::Ents,
+            selector_start: None,
         }
     }
 }
@@ -138,15 +146,15 @@ impl Game {
     }
 
     pub fn set_digging(&mut self) {
-        self.p_state.input.sel_state = SelState::Digging;
+        self.p_state.sel_state = SelState::Digging;
     }
 
     pub fn attack_with_selected(&mut self) {
-        self.p_state.input.sel_state = SelState::Attack;
+        self.p_state.sel_state = SelState::Attack;
     }
 
     pub fn move_to(&mut self) {
-        let mouse_pos = self.p_state.input.mouse_pos;
+        let mouse_pos = self.p_state.mouse_pos;
         self.move_selected_entities(mouse_pos);
     }
 
@@ -154,9 +162,9 @@ impl Game {
 
     pub fn press_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
-            self.p_state.input.selector_start = Some(self.p_state.input.mouse_pos);
-            self.p_state.input.selector = Some((self.p_state.input.mouse_pos, 
-                                                self.p_state.input.mouse_pos))
+            self.p_state.selector_start = Some(self.p_state.mouse_pos);
+            self.p_state.selector = Some((self.p_state.mouse_pos, 
+                                                self.p_state.mouse_pos))
         }
 
         if let Button::Keyboard(key) = button {
@@ -180,10 +188,10 @@ impl Game {
 
     pub fn release_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
-            if let Some(selector) = self.p_state.input.selector {   
+            if let Some(selector) = self.p_state.selector {   
                 let tiles_selector = win_to_tile_selector(selector, &self.p_state.ch);
 
-                match self.p_state.input.sel_state {
+                match self.p_state.sel_state {
                     SelState::Ents => {
                         self.p_state.selected_entities = 
                             select_entities(
@@ -196,16 +204,16 @@ impl Game {
                             &mut self.p_state.tasks, 
                             &mut self.g_state.map, 
                             tiles_selector);
-                        self.p_state.input.sel_state = SelState::Ents;
+                        self.p_state.sel_state = SelState::Ents;
                     },
                     SelState::Attack => {
                         self.add_attack_goal(tiles_selector);
-                        self.p_state.input.sel_state = SelState::Ents;
+                        self.p_state.sel_state = SelState::Ents;
                     }
                 }
 
-                self.p_state.input.selector_start = None;
-                self.p_state.input.selector = None;
+                self.p_state.selector_start = None;
+                self.p_state.selector = None;
             }
         }
     }
@@ -253,10 +261,10 @@ impl Game {
     }
 
     pub fn move_cursor(&mut self, pos: [f64; 2]) {
-        self.p_state.input.mouse_pos = (pos[0], pos[1]);
+        self.p_state.mouse_pos = (pos[0], pos[1]);
 
-        if let Some(selector_pos) = self.p_state.input.selector_start {
-            self.p_state.input.selector = Some((selector_pos, self.p_state.input.mouse_pos));
+        if let Some(selector_pos) = self.p_state.selector_start {
+            self.p_state.selector = Some((selector_pos, self.p_state.mouse_pos));
         }
     }
 

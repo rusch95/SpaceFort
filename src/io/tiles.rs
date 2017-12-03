@@ -12,25 +12,6 @@ use map::tiles::{Map, MapSnapshot};
 use entities::creatures::{CreatureMap, get_color};
 use entities::entity::Entities;
 
-
-pub struct Input {
-    pub mouse_pos: WinPos,
-    pub selector: Option<Selector>,
-    pub selector_start: Option<WinPos>, 
-    pub sel_state: SelState,
-}
-
-impl Input {
-    pub fn new() -> Input {
-        Input {
-            mouse_pos: (0.0, 0.0),
-            selector: None,
-            sel_state: SelState::Ents,
-            selector_start: None,
-        }
-    }
-}
-
 fn draw_tiles(c: Context, gl: &mut GlGraphics, 
               snap: &MapSnapshot, map: &Map) {
     let square = rectangle::square(0.0, 0.0, X_PIXELS);
@@ -114,7 +95,7 @@ pub fn render(game: &mut Game, args: &RenderArgs) {
     let entities = &game.g_state.entities;
     let ch = &game.p_state.ch;
     let map = &game.g_state.map;
-    let selector = game.p_state.input.selector;
+    let selector = game.p_state.selector;
     let creature_types = &game.g_state.creature_types;
     let gl = &mut game.p_state.gl;
 
