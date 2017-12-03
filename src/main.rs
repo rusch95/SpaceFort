@@ -21,6 +21,7 @@ mod objects;
 
 // Std lib imports
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 // Crate imports
 use piston::event_loop::*;
@@ -33,6 +34,8 @@ use map::tiles::init_map;
 use entities::entity::init_entities;
 
 
+const FRAME_RATE_NS: u32 = 1666667;
+
 fn main() {   
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
 
@@ -42,11 +45,15 @@ fn main() {
     let mut window = init_graphics();
     let mut game = init_game(map, entities, creature_types);
     let mut events = Events::new(EventSettings::new());
+    events.set_ups(240);
 
     // Game loop
     // REFACTOR Will need to abstract this for ascii and testing
+    
+    let mut now = Instant::now();
+    let mut last_update = now;
     loop {
-        
+       
         if let Some(e) = events.next(&mut window) {
 
             if let Some(button) = e.press_args() {
@@ -66,7 +73,12 @@ fn main() {
             }
         }
 
-        game.update();
+        // Updates per second
+        now = Instant::now();
+        if now.duration_since(last_update) >= Duration::new(0, FRAME_RATE_NS) {
+            last_update = now;
+            game.update();
+        }
 
         if game.done {
             break;
