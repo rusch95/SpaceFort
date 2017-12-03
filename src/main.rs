@@ -33,8 +33,8 @@ use game::base::init_game;
 use map::tiles::init_map;
 use entities::entity::init_entities;
 
-
 const FRAME_RATE_NS: u32 = 1666667;
+
 
 fn main() {   
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -53,31 +53,13 @@ fn main() {
     let mut now = Instant::now();
     let mut last_update = now;
     loop {
-       
-        if let Some(e) = events.next(&mut window) {
-
-            if let Some(button) = e.press_args() {
-                game.press_button(button);
-            }
-
-            if let Some(pos) = e.mouse_cursor_args() {
-                game.move_cursor(pos);
-            }
-
-            if let Some(button) = e.release_args() {
-                game.release_button(button);
-            }
-
-            if let Some(r) = e.render_args() {
-                game.render(&r);
-            }
-        }
+        game.player_update(&mut events, &mut window);
 
         // Updates per second
         now = Instant::now();
         if now.duration_since(last_update) >= Duration::new(0, FRAME_RATE_NS) {
             last_update = now;
-            game.update();
+            game.world_update();
         }
 
         if game.done {

@@ -21,7 +21,6 @@ pub struct Input {
 
 }
 
-
 impl Input {
     pub fn new() -> Input {
         Input {
@@ -32,7 +31,6 @@ impl Input {
         }
     }
 }
-
 
 fn draw_tiles(c: Context, gl: &mut GlGraphics, 
               snap: &MapSnapshot, map: &Map) {
@@ -55,7 +53,6 @@ fn draw_tiles(c: Context, gl: &mut GlGraphics,
         }
     }
 }
-
 
 fn draw_entities(c: Context, gl: &mut GlGraphics, 
                  ch: &CameraHandle, entities: &Entities,
@@ -84,7 +81,6 @@ fn draw_entities(c: Context, gl: &mut GlGraphics,
     }
 }
 
-
 fn team_color(team_id: TeamID) -> Color {
     match team_id {
         Some(1) => BLUE,
@@ -93,15 +89,12 @@ fn team_color(team_id: TeamID) -> Color {
     }
 }
         
-
-
 fn draw_selector(c: Context, gl: &mut GlGraphics, selector: Option<Selector>) {
     if let Some(((x1, y1), (x2, y2))) = selector {
         let selector_rect = [x1, y1, x2 - x1, y2 - y1];
         rectangle(SELECTOR_COLOR, selector_rect, c.transform, gl);
     }
 }
-
 
 pub fn init_graphics() -> Window {
     WindowSettings::new(
@@ -113,7 +106,6 @@ pub fn init_graphics() -> Window {
         .build()
         .unwrap()
 }
-
 
 pub fn render(game: &mut Game, args: &RenderArgs) {
     // TODO Keep track of FPS 

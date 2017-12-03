@@ -1,6 +1,9 @@
 use std;
+
+use piston::event_loop::*;
 use piston::input::*;
 use opengl_graphics::GlGraphics;
+use glutin_window::GlutinWindow as Window;
 
 use io::base::*;
 use io::constants::*;
@@ -27,7 +30,6 @@ pub struct Game {
     pub done: bool,
 }
 
-
 pub struct GameState {
     pub map: Map,
     pub creature_types: CreatureMap,
@@ -37,14 +39,12 @@ pub struct GameState {
     pub cur_id: EntID, // Global state for giving things ids
 }
 
-
 pub struct PlayerState {
     pub player_id: PlayerID,
     pub ch: CameraHandle,
     pub selected_entities: Vec<EntID>,
     pub tasks: Tasks,
 }
-
 
 impl PlayerState {
     pub fn new(player_id: PlayerID) -> PlayerState {
@@ -57,11 +57,9 @@ impl PlayerState {
     }
 }
 
-
 pub fn init_game(map: Map, entities: Entities, creature_types: CreatureMap) -> Game {
     Game::new(map, entities, creature_types)
 }
-
 
 impl Game {
     // Top level global state
@@ -73,6 +71,28 @@ impl Game {
             p_state: PlayerState::new(1),
             b_state: PlayerState::new(2),
             done: false,
+        }
+    }
+
+    pub fn player_update(&mut self, events: &mut Events, window: &mut Window) {
+
+        if let Some(e) = events.next(window) {
+
+            if let Some(button) = e.press_args() {
+                self.press_button(button);
+            }
+
+            if let Some(pos) = e.mouse_cursor_args() {
+                self.move_cursor(pos);
+            }
+
+            if let Some(button) = e.release_args() {
+                self.release_button(button);
+            }
+
+            if let Some(r) = e.render_args() {
+                self.render(&r);
+            }
         }
     }
 
@@ -239,7 +259,7 @@ impl Game {
         handle_to_snapshot(&self.p_state.ch, &self.g_state.map)
     }
 
-    pub fn update(&mut self) {
+    pub fn world_update(&mut self) {
         self.g_state.update();
         schedule_actions(&mut self.g_state, &mut self.p_state);
     }
