@@ -35,18 +35,18 @@ pub struct GameState {
 pub struct Player {
     pub player_id: PlayerID,
     
-    pub window: Window,
-    pub events: Events,
+    window: Window,
+    events: Events,
     pub gl: GlGraphics,
 
     pub ch: CameraHandle,
     pub selected_entities: Vec<EntID>,
     pub tasks: Tasks,
 
-    pub mouse_pos: WinPos,
+    mouse_pos: WinPos,
     pub selector: Option<Selector>,
-    pub selector_start: Option<WinPos>, 
-    pub sel_state: SelState,
+    selector_start: Option<WinPos>, 
+    sel_state: SelState,
 }
 
 pub fn init_game(map: Map, entities: Entities, creature_types: CreatureMap) -> Game {
@@ -81,7 +81,7 @@ impl Game {
                 }
 
                 if let Some(r) = e.render_args() {
-                    render(player, &mut self.g_state, &r);
+                    player.render(&mut self.g_state, &r);
                 }
             }
             
@@ -291,5 +291,9 @@ impl Player {
 
     pub fn get_snap(&mut self, map: &Map) -> MapSnapshot {
         handle_to_snapshot(&self.ch, map)
+    }
+
+    pub fn render(&mut self, g_state: &mut GameState, r: &RenderArgs) {
+        render(self, g_state, r);
     }
 }
