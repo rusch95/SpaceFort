@@ -1,5 +1,3 @@
-use std;
-
 use piston::event_loop::*;
 use piston::input::*;
 use opengl_graphics::GlGraphics;

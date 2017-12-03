@@ -23,9 +23,6 @@ mod objects;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-// Crate imports
-use piston::input::*;
-
 // Local imports
 use game::base::init_game;
 use map::tiles::init_map;
@@ -43,8 +40,6 @@ fn main() {
     let mut game = init_game(map, entities, creature_types);
 
     // Game loop
-    // REFACTOR Will need to abstract this for ascii and testing
-    
     let mut now = Instant::now();
     let mut last_update = now;
     loop {
