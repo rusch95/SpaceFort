@@ -4,7 +4,7 @@ use std::mem;
 use entities::interact::{Action, Actions, ActionType};
 use entities::pathfind::path_next_to;
 use entities::creatures::{CreatureID, CreatureMap, init_creatures, dig_speed};
-use game::base::{EntID, GameState, PlayerState, PlayerID, TeamID};
+use game::base::{EntID, GameState, Player, PlayerID, TeamID};
 use map::tiles::Map;
 
 pub type Pos = (i32, i32, i32);
@@ -138,10 +138,10 @@ pub fn attack(attacker: &mut Entity, defender_id: EntID,
 
 
 
-pub fn schedule_actions(g_state: &mut GameState, p_state: &mut PlayerState) {
+pub fn schedule_actions(g_state: &mut GameState, player: &mut Player) {
     for ent in &mut g_state.entities {
         if ent.actions.is_empty() {
-            for task in &mut p_state.tasks {
+            for task in &mut player.tasks {
                 if task.owner == None {
                     task.owner = Some(ent.id);
                     ent.actions = schedule_action(&g_state.map, ent, &g_state.creature_types, 

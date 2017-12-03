@@ -7,7 +7,7 @@ use opengl_graphics::GlGraphics;
 use io::base::*;
 use io::constants::*;
 use io::utils::*;
-use game::base::{Game, TeamID};
+use game::base::{GameState, Player, TeamID};
 use map::tiles::{Map, MapSnapshot};
 use entities::creatures::{CreatureMap, get_color};
 use entities::entity::Entities;
@@ -87,17 +87,17 @@ pub fn init_graphics() -> Window {
         .unwrap()
 }
 
-pub fn render(game: &mut Game, args: &RenderArgs) {
+pub fn render(player: &mut Player, g_state: &mut GameState, args: &RenderArgs) {
     // TODO Keep track of FPS 
     // TODO Dynamically resize window bounds
 
-    let snap = game.get_snap();
-    let entities = &game.g_state.entities;
-    let ch = &game.p_state.ch;
-    let map = &game.g_state.map;
-    let selector = game.p_state.selector;
-    let creature_types = &game.g_state.creature_types;
-    let gl = &mut game.p_state.gl;
+    let entities = &g_state.entities;
+    let map = &g_state.map;
+    let snap = player.get_snap(map);
+    let ch = &player.ch;
+    let selector = player.selector;
+    let creature_types = &g_state.creature_types;
+    let gl = &mut player.gl;
 
     gl.draw(args.viewport(), |c, gl| {
         // Clear the screen.

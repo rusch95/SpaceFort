@@ -51,9 +51,5 @@ fn main() {
             last_update = now;
             game.world_update();
         }
-
-        if game.done {
-            break;
-        }
     }
 }
