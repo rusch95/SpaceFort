@@ -8,7 +8,7 @@ use glutin_window::GlutinWindow as Window;
 use io::base::*;
 use io::constants::*;
 use io::utils::*;
-use io::tiles::{Input, render};
+use io::tiles::{Input, render, init_graphics};
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
 use entities::creatures::CreatureMap;
 use entities::entity::{Entity, Entities, Ticks, do_actions, resolve_dead, schedule_actions};
@@ -22,11 +22,8 @@ pub type EntID = i64;
 
 
 pub struct Game {
-    pub gl: GlGraphics,
-    pub input: Input,
     pub g_state: GameState,
     pub p_state: PlayerState,
-    pub b_state: PlayerState,
     pub done: bool,
 }
 
@@ -41,6 +38,12 @@ pub struct GameState {
 
 pub struct PlayerState {
     pub player_id: PlayerID,
+    
+    pub window: Window,
+    pub events: Events,
+    pub gl: GlGraphics,
+    pub input: Input,
+
     pub ch: CameraHandle,
     pub selected_entities: Vec<EntID>,
     pub tasks: Tasks,
@@ -48,8 +51,17 @@ pub struct PlayerState {
 
 impl PlayerState {
     pub fn new(player_id: PlayerID) -> PlayerState {
+        let mut events = Events::new(EventSettings::new());
+        events.set_ups(240);
+
         PlayerState {
             player_id: player_id,
+
+            window: init_graphics(),
+            events: events,
+            gl: GlGraphics::new(OPEN_GL_VERSION),
+            input: Input::new(),
+
             ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
             selected_entities: Vec::new(),
             tasks: Vec::new(),
@@ -65,18 +77,15 @@ impl Game {
     // Top level global state
     pub fn new(map: Map, entities: Entities, creature_types: CreatureMap) -> Game {
         Game {
-            gl: GlGraphics::new(OPEN_GL_VERSION),
-            input: Input::new(),
             g_state: GameState::new(map, entities, creature_types),
             p_state: PlayerState::new(1),
-            b_state: PlayerState::new(2),
             done: false,
         }
     }
 
-    pub fn player_update(&mut self, events: &mut Events, window: &mut Window) {
+    pub fn player_update(&mut self) {
 
-        if let Some(e) = events.next(window) {
+        if let Some(e) = self.p_state.events.next(&mut self.p_state.window) {
 
             if let Some(button) = e.press_args() {
                 self.press_button(button);
@@ -129,15 +138,15 @@ impl Game {
     }
 
     pub fn set_digging(&mut self) {
-        self.input.sel_state = SelState::Digging;
+        self.p_state.input.sel_state = SelState::Digging;
     }
 
     pub fn attack_with_selected(&mut self) {
-        self.input.sel_state = SelState::Attack;
+        self.p_state.input.sel_state = SelState::Attack;
     }
 
     pub fn move_to(&mut self) {
-        let mouse_pos = self.input.mouse_pos;
+        let mouse_pos = self.p_state.input.mouse_pos;
         self.move_selected_entities(mouse_pos);
     }
 
@@ -145,8 +154,9 @@ impl Game {
 
     pub fn press_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
-            self.input.selector_start = Some(self.input.mouse_pos);
-            self.input.selector = Some((self.input.mouse_pos, self.input.mouse_pos))
+            self.p_state.input.selector_start = Some(self.p_state.input.mouse_pos);
+            self.p_state.input.selector = Some((self.p_state.input.mouse_pos, 
+                                                self.p_state.input.mouse_pos))
         }
 
         if let Button::Keyboard(key) = button {
@@ -160,7 +170,6 @@ impl Game {
                 Key::A      => Game::attack_with_selected,
                 Key::D      => Game::set_digging,
                 Key::Q      => Game::quit,
-                Key::S      => Game::swap_state,
                 Key::Y      => Game::move_to,
                 _           => Game::null,
             };
@@ -169,16 +178,12 @@ impl Game {
         }
     }
 
-    pub fn swap_state(&mut self) {
-        std::mem::swap(&mut self.p_state, &mut self.b_state)
-    }
-
     pub fn release_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
-            if let Some(selector) = self.input.selector {   
+            if let Some(selector) = self.p_state.input.selector {   
                 let tiles_selector = win_to_tile_selector(selector, &self.p_state.ch);
 
-                match self.input.sel_state {
+                match self.p_state.input.sel_state {
                     SelState::Ents => {
                         self.p_state.selected_entities = 
                             select_entities(
@@ -191,16 +196,16 @@ impl Game {
                             &mut self.p_state.tasks, 
                             &mut self.g_state.map, 
                             tiles_selector);
-                        self.input.sel_state = SelState::Ents;
+                        self.p_state.input.sel_state = SelState::Ents;
                     },
                     SelState::Attack => {
                         self.add_attack_goal(tiles_selector);
-                        self.input.sel_state = SelState::Ents;
+                        self.p_state.input.sel_state = SelState::Ents;
                     }
                 }
 
-                self.input.selector_start = None;
-                self.input.selector = None;
+                self.p_state.input.selector_start = None;
+                self.p_state.input.selector = None;
             }
         }
     }
@@ -248,10 +253,10 @@ impl Game {
     }
 
     pub fn move_cursor(&mut self, pos: [f64; 2]) {
-        self.input.mouse_pos = (pos[0], pos[1]);
+        self.p_state.input.mouse_pos = (pos[0], pos[1]);
 
-        if let Some(selector_pos) = self.input.selector_start {
-            self.input.selector = Some((selector_pos, self.input.mouse_pos));
+        if let Some(selector_pos) = self.p_state.input.selector_start {
+            self.p_state.input.selector = Some((selector_pos, self.p_state.input.mouse_pos));
         }
     }
 

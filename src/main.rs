@@ -24,11 +24,9 @@ use std::path::Path;
 use std::time::{Duration, Instant};
 
 // Crate imports
-use piston::event_loop::*;
 use piston::input::*;
 
 // Local imports
-use io::tiles::init_graphics;
 use game::base::init_game;
 use map::tiles::init_map;
 use entities::entity::init_entities;
@@ -42,10 +40,7 @@ fn main() {
     // REFACTOR Maybe should move non-essential inits into init_game
     let map = init_map(root);
     let (entities, creature_types) = init_entities(root);
-    let mut window = init_graphics();
     let mut game = init_game(map, entities, creature_types);
-    let mut events = Events::new(EventSettings::new());
-    events.set_ups(240);
 
     // Game loop
     // REFACTOR Will need to abstract this for ascii and testing
@@ -53,7 +48,7 @@ fn main() {
     let mut now = Instant::now();
     let mut last_update = now;
     loop {
-        game.player_update(&mut events, &mut window);
+        game.player_update();
 
         // Updates per second
         now = Instant::now();

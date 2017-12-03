@@ -18,7 +18,6 @@ pub struct Input {
     pub selector: Option<Selector>,
     pub selector_start: Option<WinPos>, 
     pub sel_state: SelState,
-
 }
 
 impl Input {
@@ -115,10 +114,11 @@ pub fn render(game: &mut Game, args: &RenderArgs) {
     let entities = &game.g_state.entities;
     let ch = &game.p_state.ch;
     let map = &game.g_state.map;
-    let selector = game.input.selector;
+    let selector = game.p_state.input.selector;
     let creature_types = &game.g_state.creature_types;
+    let gl = &mut game.p_state.gl;
 
-    game.gl.draw(args.viewport(), |c, gl| {
+    gl.draw(args.viewport(), |c, gl| {
         // Clear the screen.
         clear(BLACK, gl);
 
