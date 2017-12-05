@@ -4,6 +4,7 @@ version = "0.2.0"
 authors = ["rusch <rusch@mit.edu>"]
 
 [dependencies]
+bincode = "0.9.2"
 clippy = {version = "*", optional = true}
 pathfinding = "0.1"
 piston = "0.32.0"
