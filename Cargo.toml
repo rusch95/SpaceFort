@@ -5,16 +5,16 @@ authors = ["rusch <rusch@mit.edu>"]
 
 [dependencies]
 clippy = {version = "*", optional = true}
-pathfinding = "0.1"
-piston = "0.32.0"
-piston2d-graphics = "0.21.1"
-pistoncore-glutin_window = "0.37.0"
-piston2d-opengl_graphics = "0.44.0"
-rand = "0.3"
-regex = "0.1.41"
-serde = "1.0.11"
-serde_derive = "1.0.11"
-toml = "0.4.5"
+pathfinding = ">=0.1"
+piston = ">=0.32"
+piston2d-graphics = ">=0.21"
+pistoncore-glutin_window = ">=0.37"
+piston2d-opengl_graphics = ">=0.44"
+rand = ">=0.3"
+regex = ">=0.1"
+serde = ">=1.0"
+serde_derive = ">=1.0"
+toml = ">=0.4"
 
 [features]
 default = []
