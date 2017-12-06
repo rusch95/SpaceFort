@@ -10,7 +10,6 @@
 ==============================
 
 * Tileset
-* Ramps and Floors as property
 * Ambient Movement
 * More creatures
 * Refactor/Extend, esp. attacking, actions, and goals
@@ -29,6 +28,8 @@
 * Fix pathfinding int hack
 * Restore ascii to functionality
 * Early Procedural Generation
+* Better Map Editor
+* Ramps and Floors as property
 
 
 Feature Stack

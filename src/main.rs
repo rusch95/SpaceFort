@@ -1,6 +1,7 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
+extern crate spacefort;
 extern crate glutin_window;
 extern crate graphics;
 extern crate opengl_graphics;
@@ -11,13 +12,7 @@ extern crate rand;
 extern crate serde_derive;
 extern crate toml;
 
-mod entities;
-mod game;
-mod gen;
-mod io;
-mod map;
-mod net;
-mod objects;
+use spacefort::*;
 
 // Std lib imports
 use std::path::Path;
