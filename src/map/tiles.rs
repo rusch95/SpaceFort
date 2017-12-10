@@ -2,7 +2,7 @@ use std::fs::File;
 use std::path::Path;
 use std::io::{Read, Write, BufWriter, Error};
 
-use entities::entity::Pos;
+use game::base::*;
 use io::base::CameraHandle;
 use map::constants::*;
 use map::material::{init_materials, MaterialID, Material, Materials};
@@ -11,7 +11,7 @@ type Tiles = Vec<Tile>;
 
 //TODO Clean up unwraps
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Tile {
     //Single map unit
     pub material: MaterialID,
@@ -44,6 +44,14 @@ pub struct MapSnapshot {
     pub ylen: i32,
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub struct MapChunk {
+    pub tiles: Tiles,
+    pub xlen: i32,
+    pub ylen: i32,
+    pub zlen: i32,
+}
+
 impl Map {
     #[allow(dead_code)]
     pub fn print(&self) {
@@ -61,6 +69,10 @@ impl Map {
             }
             println!();
         }
+    }
+
+    pub fn size(&self) -> (i32, i32, i32) {
+        (self.xlen, self.ylen, self.zlen)
     }
 
     pub fn get_tile(&self, pos: Pos) -> Option<Tile> {
@@ -198,6 +210,7 @@ pub fn handle_to_snapshot(handle: &CameraHandle, map: &Map) -> MapSnapshot {
 }
 
 pub fn init_map(root: &Path) -> Map {
+    info!("Initializing map");
     let test_path = root.join("static/inc/maps/arena.sfm");
     let path_str = test_path
                    .to_str()

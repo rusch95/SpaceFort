@@ -1,8 +1,11 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
+extern crate bincode;
 extern crate glutin_window;
 extern crate graphics;
+#[macro_use]
+extern crate log;
 extern crate opengl_graphics;
 extern crate pathfinding;
 extern crate piston;

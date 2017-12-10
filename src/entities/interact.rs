@@ -1,8 +1,9 @@
 use std::collections::VecDeque;
 use std::cmp::{min, max};
+
 use map::tiles::Map;
-use entities::entity::{Entities, EntIds, Pos, Ticks};
-use game::base::{EntID, Player};
+use entities::entity::{Entities, EntID, EntIDs};
+use game::base::*;
 use io::base::TilesSelector;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -42,14 +43,14 @@ pub type Actions = VecDeque<Action>;
 pub type Tasks = Vec<Task>;
 
 // TODO Refactor into having a filter Predicate supplied
-pub fn select_entities(ents: &Entities, player: &Player, 
-                       selector: TilesSelector) -> EntIds {
+pub fn select_entities(ents: &Entities, player_id: PlayerID, 
+                       selector: TilesSelector) -> EntIDs {
     let (s1, s2) = rotate_selector(selector);
 
-    let mut ent_ids = EntIds::new();
+    let mut ent_ids = EntIDs::new();
     for ent in ents {
         if let Some(team_id) = ent.team_id {
-            if team_id == player.player_id && s1 <= ent.pos && ent.pos <= s2 {
+            if team_id == player_id && s1 <= ent.pos && ent.pos <= s2 {
                 ent_ids.push(ent.id);
             }
         }
@@ -57,14 +58,14 @@ pub fn select_entities(ents: &Entities, player: &Player,
     ent_ids
 }
 
-pub fn select_bad_entities(ents: &Entities, player: &Player, 
-                           selector: TilesSelector) -> EntIds {
+pub fn select_bad_entities(ents: &Entities, player_id: PlayerID,
+                           selector: TilesSelector) -> EntIDs {
     let (s1, s2) = rotate_selector(selector);
 
-    let mut ent_ids = EntIds::new();
+    let mut ent_ids = EntIDs::new();
     for ent in ents {
         if let Some(team_id) = ent.team_id {
-            if team_id != player.player_id && s1 <= ent.pos && ent.pos <= s2 {
+            if team_id != player_id && s1 <= ent.pos && ent.pos <= s2 {
                 ent_ids.push(ent.id);
             }
         }

@@ -1,61 +1,49 @@
+extern crate spacefort;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 #[macro_use]
 extern crate serde_derive;
 extern crate bincode;
 
-use bincode::{serialize, deserialize, Infinite};
-use std::net::{Ipv4Addr, SocketAddrV4, UdpSocket};
-use std::io;
+// Std lib imports
+use std::path::Path;
 use std::sync::mpsc::channel;
 use std::thread;
-use std::time::Duration;
 
+use bincode::{serialize, deserialize, Infinite};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-enum Foo {
-    Int(i32),
-    Float(f32),
-}
+// Local imports
+use spacefort::*;
+use game::client::init_client;
+use map::tiles::init_map;
+use entities::entity::init_entities;
+use net::client::init_network;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-struct World(Vec<Foo>);
-
-
-fn rcv() -> Result<World, io::Error> {
-    let ip = Ipv4Addr::new(127, 0, 0, 1);
-    let connection = SocketAddrV4::new(ip, 9991);
-
-    // Bind the socket
-    let socket = try!(UdpSocket::bind(connection));
-
-    let mut buf = [0; 512];
-
-    let (amt, src) = try!(socket.recv_from(&mut buf));
-
-    let decoded: World = deserialize(&buf[..amt]).unwrap();
-
-    Ok(decoded)
-}
 
 fn main() {   
-    println!("Starting client");
+    env_logger::init().unwrap();
+    info!("Starting client");
+
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+    let map = init_map(root);
+    let (entities, creature_types) = init_entities(root);
+    let (in_net, out_net) = init_network();
 
     let (sender, receiver) = channel();
+    let mut client = init_client(map, entities, creature_types, out_net, receiver);
 
     thread::spawn(move|| {
         loop {
-            match rcv() {
-                Ok(world) => sender.send(world).unwrap(),
-                Err(err) => println!("Error: {:?}", err),
+            match in_net.rcv() {
+                Ok(msg) => sender.send(msg).unwrap(),
+                Err(err) => {},
             }
         }
     });
 
-    thread::sleep(Duration::new(10, 0));
-    loop {
-        let dur = Duration::new(0, 1000);
-        match receiver.recv_timeout(dur) {
-            Ok(res) => println!("Recieved world {:?}", res),
-            Err(err) => {},
-        }
-    }
+    client.start();
+
+    info!("Closing client");
 }

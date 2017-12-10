@@ -2,6 +2,7 @@
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
 extern crate spacefort;
+extern crate bincode;
 extern crate glutin_window;
 extern crate graphics;
 extern crate opengl_graphics;

@@ -1,17 +1,16 @@
 use std::path::Path;
 use std::mem;
 
-use entities::interact::{Action, Actions, ActionType};
+use entities::interact::{Action, Actions, ActionType, Tasks};
 use entities::pathfind::path_next_to;
 use entities::creatures::{CreatureID, CreatureMap, init_creatures, dig_speed};
-use game::base::{EntID, GameState, Player, PlayerID, TeamID};
+use game::base::*;
 use map::tiles::Map;
 
-pub type Pos = (i32, i32, i32);
-pub type Ticks = i32;
-pub type EntIds = Vec<EntID>;
+pub type EntID = i64;
+pub type EntIDs = Vec<EntID>;
 pub type Entities = Vec<Entity>;
-
+pub type EntSnaps = Vec<EntSnap>;
 pub type Health = i32;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -26,6 +25,16 @@ pub struct Entity {
     pub alive: bool,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq)]
+// Smaller Ent for sending to clients for printing
+pub struct EntSnap {
+    pub id: EntID,
+    pub creature_id: CreatureID,
+    pub pos: Pos,
+    pub team_id: TeamID,
+    pub health: Health,
+    pub alive: bool,
+}
 
 impl Entity {
     fn new(id: EntID, creature_id: CreatureID, pos: Pos, team_id: PlayerID) -> Entity {
@@ -42,8 +51,8 @@ impl Entity {
     }
 }
 
-
 pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
+    info!("Initializing entities");
 
     let creature_types = init_creatures(root);
     let mut ents = Entities::new();
@@ -65,24 +74,22 @@ pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
     (ents, creature_types)
 }
 
-
-pub fn resolve_dead(g_state: &mut GameState) {
+pub fn resolve_dead(entities: &mut Entities) {
     // For now just mark dead as not having a team
     // Will turn the dead into items in future iterations
 
-    for ent in &mut g_state.entities {
+    for ent in entities {
         if ent.alive == false {
             ent.team_id = None;
         }
     }
 }
 
-
-pub fn do_actions(g_state: &mut GameState) {
-    let ent_len = g_state.entities.len();
+pub fn do_actions(entities: &mut Entities, map: &mut Map) {
+    let ent_len = entities.len();
     let mut temp_vec = Actions::new();
-    for i in 0..g_state.entities.len() {
-        let (front_ents, _back_ents) = g_state.entities.split_at_mut(i);
+    for i in 0..entities.len() {
+        let (front_ents, _back_ents) = entities.split_at_mut(i);
         let (_ent, back_ents) = _back_ents.split_at_mut(1);
         let ent = &mut _ent[0];
         assert_eq!(front_ents.len() + 1 + back_ents.len(), ent_len);
@@ -99,7 +106,7 @@ pub fn do_actions(g_state: &mut GameState) {
                             ent.pos = pos;
                         },
                         ActionType::Dig(pos) => {
-                            g_state.map.dig(pos)
+                            map.dig(pos)
                         },
                         ActionType::Attack(ent_id) => {
                             attack(ent, ent_id, front_ents, back_ents)
@@ -138,13 +145,15 @@ pub fn attack(attacker: &mut Entity, defender_id: EntID,
 
 
 
-pub fn schedule_actions(g_state: &mut GameState, player: &mut Player) {
-    for ent in &mut g_state.entities {
+pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, 
+                        map: &Map, creature_types: &CreatureMap) {
+    for ent in entities {
         if ent.actions.is_empty() {
-            for task in &mut player.tasks {
+            for task in tasks.iter_mut() {
                 if task.owner == None {
                     task.owner = Some(ent.id);
-                    ent.actions = schedule_action(&g_state.map, ent, &g_state.creature_types, 
+                    ent.actions = schedule_action(map, ent, 
+                                                  creature_types, 
                                                   task.atype);
                     break;
                 }

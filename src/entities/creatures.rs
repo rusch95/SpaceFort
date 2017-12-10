@@ -4,7 +4,7 @@ use std::io::Read;
 use std::collections::HashMap;
 
 use io::constants::*;
-use entities::entity::Ticks;
+use game::base::*;
 use toml;
 
 pub type CreatureID = u16;
@@ -48,6 +48,8 @@ pub struct ProtoCreature {
 //
 // TODO Genercize and dedup object, entity, and material 
 pub fn init_creatures(root: &Path) -> CreatureMap {
+    info!("Initializing creatures");
+
     // Read creatures file to str
     let creature_path = root.join("static/inc/creatures/creatures.toml");
     let path_str = creature_path

@@ -1,5 +1,4 @@
-use entities::entity::Pos;
-
+use game::base::Pos;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum SelState {
@@ -7,7 +6,6 @@ pub enum SelState {
     Digging,
     Attack,
 }
-
 
 pub struct CameraHandle {
     //Representation of the player's camera

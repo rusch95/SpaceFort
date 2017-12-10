@@ -1,6 +1,6 @@
 use io::base::*;
 use io::constants::*;
-use entities::entity::Pos;
+use game::base::*;
 
 
 pub fn win_pos_to_tile(win_pos: WinPos, ch: &CameraHandle) -> Pos {
