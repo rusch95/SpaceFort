@@ -87,7 +87,7 @@ impl Client {
         info!("Client Started");
 
         self.out_net.ask_join();
-        self.out_net.ent_move(0, (1, 1, 1));
+        self.out_net.ent_move(-1, (1, 1, 1));
 
         loop {
             if let Some(e) = self.events.next(&mut self.window) {
@@ -107,9 +107,9 @@ impl Client {
                 if let Some(_) = e.update_args() {
                     // Network Updates
                     let dur = Duration::new(0, 1000);
-                    match self.receiver.recv_timeout(dur) {
-                        Ok(msg) => self.dispatch(msg),
-                        Err(err) => {},
+
+                    while let Ok(msg) = self.receiver.recv_timeout(dur) {
+                        self.dispatch(msg);
                     }
                 }
 
@@ -179,8 +179,6 @@ impl Client {
     }
 
     pub fn dispatch(&mut self, msg: ServerMsg) {
-        info!("Msg: {:?}", msg);
-
         match msg {
             ServerMsg::ReplyJoin(player_join) => self.join(player_join),
             ServerMsg::SendEnts(ent_snaps) => self.update_ents(ent_snaps),
@@ -198,7 +196,9 @@ impl Client {
         for ent_snap in ent_snaps {
             for ent in self.entities.iter_mut() {
                 if ent_snap.id == ent.id {
-                    info!("Cool");
+                    ent.pos = ent_snap.pos;
+                    ent.health = ent_snap.health;
+                    ent.alive = ent_snap.alive;
                 }
             }
         }

@@ -49,6 +49,17 @@ impl Entity {
             alive: true,
         }
     }
+
+    pub fn snap(&self) -> EntSnap {
+        EntSnap {
+            id: self.id,
+            creature_id: self.creature_id,
+            pos: self.pos,
+            team_id: self.team_id,
+            health: self.health,
+            alive: self.alive,
+        }
+    }
 }
 
 pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {

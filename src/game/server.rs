@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 use map::tiles::Map;
 use game::base::*;
 use entities::creatures::CreatureMap;
-use entities::entity::{Entity, Entities, EntID, EntIDs};
+use entities::entity::{Entity, Entities, EntSnaps, EntID, EntIDs};
 use entities::entity::{do_actions, resolve_dead, schedule_actions};
 use entities::interact::{Action, Tasks};
 use entities::pathfind::{path_to, path_next_to};
@@ -17,7 +17,7 @@ use net::server::ServerNetOut;
 
 type ClientMsgReceiver = Receiver<(ClientMsg, SocketAddr)>;
 
-const FRAME_RATE_NS: u32 = 1666667;
+const FRAME_RATE_NS: u32 = 16666667;
 
 pub struct Server {
     pub g_state: GameState,
@@ -77,7 +77,7 @@ impl Server {
             }
 
             // Network Updates
-            self.ent_updates()
+            self.ent_updates();
 
             let dur = Duration::new(0, 1000);
             match self.receiver.recv_timeout(dur) {
@@ -88,10 +88,12 @@ impl Server {
     }
 
     fn ent_updates(&mut self) {
-        ent_snaps = EntSnaps::new();
+        let mut ent_snaps = EntSnaps::new();
         for ent in self.g_state.entities.iter_mut() {
-            ent_snaps(ent.snap());
+            ent_snaps.push(ent.snap());
         }
+        
+        self.net_out.send_ents(0, ent_snaps);
     }
 
     pub fn add_player(&mut self, conn: SocketAddr) {
