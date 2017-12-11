@@ -6,6 +6,7 @@ use entities::creatures::{CreatureMap, movement_speed};
 
 use pathfinding::fringe;
 
+
 const UNIT_DIST: i32 = 100;
 const DIAG_DIST: i32 = (UNIT_DIST as f64 * 1.414) as i32;
 

@@ -9,6 +9,16 @@ use entities::entity::{EntSnaps};
 use map::tiles::{Tile, MapChunk};
 use net::base::*;
 
+
+pub struct ServerNetOut {
+    socket: UdpSocket,
+    player_conns: HashMap<PlayerID, SocketAddr>,
+}
+
+pub struct ServerNetIn {
+    socket: UdpSocket,
+}
+
 pub fn init_network() -> (ServerNetIn, ServerNetOut) {
     let localhost = Ipv4Addr::new(127, 0, 0, 1);
     let conn = SocketAddrV4::new(localhost , SERVER_PORT);
@@ -18,15 +28,6 @@ pub fn init_network() -> (ServerNetIn, ServerNetOut) {
     let net_out = ServerNetOut::new(socket);
 
     (net_in, net_out)
-}
-
-pub struct ServerNetOut {
-    socket: UdpSocket,
-    player_conns: HashMap<PlayerID, SocketAddr>,
-}
-
-pub struct ServerNetIn {
-    socket: UdpSocket,
 }
 
 impl ServerNetOut {

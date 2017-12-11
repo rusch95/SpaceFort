@@ -7,6 +7,7 @@ use entities::creatures::{CreatureID, CreatureMap, init_creatures, dig_speed};
 use game::base::*;
 use map::tiles::Map;
 
+
 pub type EntID = i64;
 pub type EntIDs = Vec<EntID>;
 pub type Entities = Vec<Entity>;
@@ -136,7 +137,6 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) {
     };
 }
 
-
 pub fn attack(attacker: &mut Entity, defender_id: EntID,
               left_ents: &mut [Entity], right_ents: &mut [Entity]) {
     if let Some(defender) = left_ents.iter_mut()
@@ -154,8 +154,6 @@ pub fn attack(attacker: &mut Entity, defender_id: EntID,
     }
 }
 
-
-
 pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, 
                         map: &Map, creature_types: &CreatureMap) {
     for ent in entities {
@@ -172,7 +170,6 @@ pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks,
         }
     }
 }
-
 
 fn schedule_action(map: &Map, ent: &Entity, creature_types: &CreatureMap, 
                    atype: ActionType) -> Actions {

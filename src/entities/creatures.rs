@@ -7,6 +7,7 @@ use io::constants::*;
 use game::base::*;
 use toml;
 
+
 pub type CreatureID = u16;
 pub type CreatureMap = HashMap<CreatureID, Creature>;
 type ProtoCreatures = Vec<ProtoCreature>;

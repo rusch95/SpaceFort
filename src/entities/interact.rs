@@ -6,16 +6,14 @@ use entities::entity::{Entities, EntID, EntIDs};
 use game::base::*;
 use io::base::TilesSelector;
 
+
+pub type Actions = VecDeque<Action>;
+pub type Tasks = Vec<Task>;
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Action {
     pub atype: ActionType,
     pub duration: Ticks
-}
-
-impl Action {
-    pub fn attack(ent_id: EntID) -> Action {
-        Action { atype: ActionType::Attack(ent_id), duration: 10 }
-    }
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -33,14 +31,17 @@ pub struct Task {
     pub owner: Option<EntID>,
 }
 
+impl Action {
+    pub fn attack(ent_id: EntID) -> Action {
+        Action { atype: ActionType::Attack(ent_id), duration: 10 }
+    }
+}
+
 impl Task {
     fn dig(pos: Pos) -> Task {
         Task { atype: ActionType::Dig(pos), owner: None }
     }
 }
-
-pub type Actions = VecDeque<Action>;
-pub type Tasks = Vec<Task>;
 
 // TODO Refactor into having a filter Predicate supplied
 pub fn select_entities(ents: &Entities, player_id: PlayerID, 

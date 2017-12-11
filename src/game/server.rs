@@ -15,8 +15,6 @@ use net::server::ServerNetOut;
 
 type ClientMsgReceiver = Receiver<(ClientMsg, SocketAddr)>;
 
-const FRAME_RATE_NS: u32 = 16666667;
-
 pub struct Server {
     pub g_state: GameState,
     pub players: Vec<ServerPlayer>,

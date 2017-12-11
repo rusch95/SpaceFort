@@ -1,28 +1,23 @@
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
+use glutin_window::GlutinWindow as Window;
+use opengl_graphics::GlGraphics;
 use piston::event_loop::*;
 use piston::input::*;
-use opengl_graphics::GlGraphics;
-use glutin_window::GlutinWindow as Window;
 
+use entities::creatures::CreatureMap;
+use entities::entity::{Entities, EntID, EntSnaps};
+use entities::interact::select_entities;
 use game::base::*;
 use io::base::*;
 use io::constants::*;
 use io::utils::*;
 use io::tiles::{render, init_graphics};
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
-use entities::creatures::CreatureMap;
-use entities::entity::{Entities, EntID, EntSnaps};
-use entities::interact::select_entities;
 use net::base::{ServerMsg, PlayerJoin};
 use net::client::ClientNetOut;
 
-
-pub fn init_client(map: Map, entities: Entities, creature_types: CreatureMap,
-                   out_net: ClientNetOut, receiver: Receiver<ServerMsg>) -> Client {
-    Client::new(0, map, entities, creature_types, out_net, receiver)
-}
 
 pub struct Client {
     pub player_id: PlayerID,
@@ -41,12 +36,16 @@ pub struct Client {
     out_net: ClientNetOut,
     receiver: Receiver<ServerMsg>,
 
-
     // State to sync from GameState
     pub creature_types: CreatureMap,
     pub entities: Entities,
     pub map: Map,
     pub ticks: Ticks,
+}
+
+pub fn init_client(map: Map, entities: Entities, creature_types: CreatureMap,
+                   out_net: ClientNetOut, receiver: Receiver<ServerMsg>) -> Client {
+    Client::new(0, map, entities, creature_types, out_net, receiver)
 }
 
 impl Client {

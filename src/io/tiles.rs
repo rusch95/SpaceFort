@@ -13,6 +13,7 @@ use map::tiles::{Map, MapSnapshot};
 use entities::creatures::{CreatureMap, get_color};
 use entities::entity::Entities;
 
+
 fn draw_tiles(c: Context, gl: &mut GlGraphics, 
               snap: &MapSnapshot, map: &Map) {
     let square = rectangle::square(0.0, 0.0, X_PIXELS);

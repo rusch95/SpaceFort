@@ -7,7 +7,8 @@ use io::base::CameraHandle;
 use map::constants::*;
 use map::material::{init_materials, MaterialID, Material, Materials};
 
-type Tiles = Vec<Tile>;
+
+pub type Tiles = Vec<Tile>;
 
 //TODO Clean up unwraps
 
@@ -16,13 +17,6 @@ pub struct Tile {
     //Single map unit
     pub material: MaterialID,
     pub marked: bool,
-}
-
-impl Tile {
-    fn new(material: MaterialID) -> Tile {
-        Tile { material: material,
-               marked: false }
-    }
 }
 
 #[derive(Clone, PartialEq)]
@@ -51,6 +45,26 @@ pub struct MapChunk {
     pub xlen: i32,
     pub ylen: i32,
     pub zlen: i32,
+}
+
+pub fn init_map(root: &Path) -> Map {
+    info!("Initializing map");
+    let test_path = root.join("static/inc/maps/arena.sfm");
+    let path_str = test_path
+                   .to_str()
+                   .expect("Unicode decode error");
+
+    // Load materials properties file
+    let materials = init_materials(root);
+
+    load_map(path_str, materials).expect("Could not load map")
+}
+
+impl Tile {
+    fn new(material: MaterialID) -> Tile {
+        Tile { material: material,
+               marked: false }
+    }
 }
 
 impl Map {
@@ -256,19 +270,6 @@ pub fn handle_to_snapshot(handle: &CameraHandle, map: &Map) -> MapSnapshot {
         }
     }
     MapSnapshot {tiles: tiles, xlen: handle.xlen, ylen: handle.ylen}
-}
-
-pub fn init_map(root: &Path) -> Map {
-    info!("Initializing map");
-    let test_path = root.join("static/inc/maps/arena.sfm");
-    let path_str = test_path
-                   .to_str()
-                   .expect("Unicode decode error");
-
-    // Load materials properties file
-    let materials = init_materials(root);
-
-    load_map(path_str, materials).expect("Could not load map")
 }
 
 pub fn blank_map(root: &Path) -> Map {
