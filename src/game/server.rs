@@ -1,8 +1,5 @@
-use std::io;
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
-use std::sync::{Arc, RwLock};
+use std::net::SocketAddr;
 use std::sync::mpsc::Receiver;
-use std::thread;
 use std::time::{Duration, Instant};
 
 use map::tiles::Map;
@@ -14,6 +11,7 @@ use entities::interact::{Action, Tasks};
 use entities::pathfind::{path_to, path_next_to};
 use net::base::{ClientMsg, PlayerJoin};
 use net::server::ServerNetOut;
+
 
 type ClientMsgReceiver = Receiver<(ClientMsg, SocketAddr)>;
 
@@ -82,7 +80,7 @@ impl Server {
             let dur = Duration::new(0, 1000);
             match self.receiver.recv_timeout(dur) {
                 Ok((msg, src)) => self.dispatch(msg, src),
-                Err(err) => {},
+                Err(_) => {},
             }
         }
     }
@@ -105,6 +103,7 @@ impl Server {
         let player_join = PlayerJoin::new(player_id, self.g_state.map.size());
         
         self.net_out.reply_join(player_join, conn);
+
     }
 
     pub fn ent_move(&mut self, ent_id: EntID, pos: Pos) {
@@ -186,7 +185,7 @@ impl ServerPlayer {
              g_state.entities.iter_mut()
                              .partition( |ent| ent.team_id == team_id);
 
-        if let Some(mut target) = else_ents.iter_mut()
+        if let Some(target) = else_ents.iter_mut()
                                            .find(|ref ent| (*ent).id == target_id) {
             for ent_id in attackers {
                 if let Some(mut ent) = team_ents.iter_mut()

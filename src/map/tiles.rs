@@ -47,6 +47,7 @@ pub struct MapSnapshot {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct MapChunk {
     pub tiles: Tiles,
+    pub pos: Pos,
     pub xlen: i32,
     pub ylen: i32,
     pub zlen: i32,
@@ -73,6 +74,54 @@ impl Map {
 
     pub fn size(&self) -> (i32, i32, i32) {
         (self.xlen, self.ylen, self.zlen)
+    }
+
+    // Resize map as given with blank tiles
+    pub fn resize(&mut self, pos: Pos) {
+        let (x, y, z) = pos;
+        self.tiles = vec![AIR_TILE; (x * y * z) as usize];
+        self.xlen = x;
+        self.ylen = y;
+        self.zlen = z;
+    }
+
+    pub fn get_chunk(&mut self, pos: Pos, size: Pos) -> MapChunk {
+        let (x0, y0, z0) = pos;
+        let (xlen, ylen, zlen) = size;
+
+        let mut tiles = Tiles::new();
+        for x in x0..(x0 + xlen) {
+            for y in y0..(y0 + ylen) {
+                for z in z0..(z0 + zlen) {
+                    let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
+                    tiles.push(self.tiles[index]);
+                }
+            }
+        }
+
+        MapChunk {
+            tiles: tiles,
+            pos: pos,
+            xlen: xlen,
+            ylen: ylen,
+            zlen: zlen,
+        }
+    }
+
+    pub fn apply_chunk(&mut self, chunk: MapChunk) {
+        let (x0, y0, z0) = chunk.pos;
+
+        for z in 0..chunk.zlen {
+            for y in 0..chunk.ylen {
+                for x in 0..chunk.xlen {
+                    let chunk_i = (x + y * chunk.xlen + z * chunk.xlen * chunk.ylen) as usize;
+                    let map_i = ((x + x0) + 
+                                 (y + y0) * self.xlen + 
+                                 (z + z0) * self.xlen * self.ylen) as usize;
+                    self.tiles[map_i] = chunk.tiles[chunk_i];
+                }
+            }
+        }
     }
 
     pub fn get_tile(&self, pos: Pos) -> Option<Tile> {
@@ -220,6 +269,19 @@ pub fn init_map(root: &Path) -> Map {
     let materials = init_materials(root);
 
     load_map(path_str, materials).expect("Could not load map")
+}
+
+pub fn blank_map(root: &Path) -> Map {
+    // Load materials properties file
+    let materials = init_materials(root);
+
+    Map {
+        tiles: Tiles::new(), 
+        materials: materials, 
+        xlen: 0,
+        ylen: 0,
+        zlen: 0,
+    }
 }
 
 fn load_map(path: &str, materials: Materials) -> Result<Map, Error> {

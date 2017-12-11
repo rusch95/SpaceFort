@@ -2,21 +2,16 @@ extern crate spacefort;
 #[macro_use]
 extern crate log;
 extern crate env_logger;
-#[macro_use]
-extern crate serde_derive;
-extern crate bincode;
 
 // Std lib imports
 use std::path::Path;
 use std::sync::mpsc::channel;
 use std::thread;
 
-use bincode::{serialize, deserialize, Infinite};
-
 // Local imports
 use spacefort::*;
 use game::client::init_client;
-use map::tiles::init_map;
+use map::tiles::blank_map;
 use entities::entity::init_entities;
 use net::client::init_network;
 
@@ -27,7 +22,7 @@ fn main() {
 
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
 
-    let map = init_map(root);
+    let map = blank_map(root);
     let (entities, creature_types) = init_entities(root);
     let (in_net, out_net) = init_network();
 
@@ -38,7 +33,7 @@ fn main() {
         loop {
             match in_net.rcv() {
                 Ok(msg) => sender.send(msg).unwrap(),
-                Err(err) => {},
+                Err(_) => {},
             }
         }
     });

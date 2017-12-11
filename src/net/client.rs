@@ -74,7 +74,10 @@ impl ClientNetOut {
     }
 
     pub fn snd_msg(&self, msg: ClientMsg) {
-        self.snd(msg, self.server);
+        match self.snd(msg, self.server) {
+            Ok(_) => {},
+            Err(err) => {error!("{}", err)},
+        }
     }
 
     fn snd(&self, msg: ClientMsg, dest: SocketAddrV4) -> Result<(), io::Error> {
@@ -95,7 +98,7 @@ impl ClientNetIn {
 
     pub fn rcv(&self) -> Result<ServerMsg, io::Error> {
         let mut buf = [0; 512];
-        let (amt, src) = try!(self.socket.recv_from(&mut buf));
+        let (amt, _src) = try!(self.socket.recv_from(&mut buf));
         let dec_msg: ServerMsg = deserialize(&buf[..amt]).unwrap();
 
         Ok(dec_msg)

@@ -1,9 +1,5 @@
-use std::io;
-use std::net::{Ipv4Addr, SocketAddrV4, UdpSocket};
-use std::sync::{Arc, RwLock};
 use std::sync::mpsc::Receiver;
-use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use piston::event_loop::*;
 use piston::input::*;
@@ -189,7 +185,7 @@ impl Client {
     fn join(&mut self, player_join: PlayerJoin) {
         self.player_id = player_join.player_id;
 
-        // TODO Update map
+        self.map.resize(player_join.map_dim);
     }
 
     fn update_ents(&mut self, ent_snaps: EntSnaps) {

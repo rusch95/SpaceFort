@@ -35,7 +35,7 @@ fn main() {
         loop {
             match in_net.rcv() {
                 Ok((msg, src)) => sender.send((msg, src)).unwrap(),
-                Err(err) => {},
+                Err(_) => {},
             }
         }
     });

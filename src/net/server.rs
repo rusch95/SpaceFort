@@ -71,7 +71,10 @@ impl ServerNetOut {
 
     pub fn snd_msg(&self, player_id: PlayerID, msg: ServerMsg) {
         if let Some(dst) = self.player_conns.get(&player_id) {
-            self.snd(msg, *dst);
+            match self.snd(msg, *dst) {
+                Ok(_) => {},
+                Err(err) => {error!("{}", err)},
+            }
         } else {
             error!("Could not find PlayerID {} in PlayerIPs", player_id);
         }
