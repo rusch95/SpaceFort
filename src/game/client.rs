@@ -8,7 +8,7 @@ use piston::input::*;
 
 use entities::creatures::CreatureMap;
 use entities::entity::{Entities, EntID, EntSnaps};
-use entities::interact::select_entities;
+use entities::interact::{select_entities, select_bad_entities};
 use game::base::*;
 use io::base::*;
 use io::constants::*;
@@ -154,15 +154,11 @@ impl Client {
                                 tiles_selector);
                     },
                     SelState::Digging  => {
-                        // TODO rpc
-                        // add_dig_tasks(
-                        //     &mut g_state.map, 
-                        //     tiles_selector);
+                        self.out_net.mark_dig(tiles_selector);
                         self.sel_state = SelState::Ents;
                     },
                     SelState::Attack => {
-                        // TODO rpc
-                        // self.add_attack_goal(g_state, tiles_selector);
+                        self.add_attack_goal(tiles_selector);
                         self.sel_state = SelState::Ents;
                     }
                 }
@@ -171,6 +167,21 @@ impl Client {
                 self.selector = None;
             }
         }
+    }
+
+    fn add_attack_goal(&mut self, tiles_selector: TilesSelector) {
+        let mut targets = select_bad_entities(
+                              &self.entities,
+                              self.player_id,
+                              tiles_selector);
+
+        if let Some(target_id) = targets.pop() {
+            for attacker_id in &self.selected_entities {
+                self.out_net.ent_attack(*attacker_id, target_id);
+            }
+        }
+
+        self.selected_entities.clear();
     }
 
     pub fn dispatch(&mut self, msg: ServerMsg) {
@@ -242,9 +253,13 @@ impl Client {
     }
 
     pub fn move_to(&mut self) {
-        let mouse_pos = self.mouse_pos;
-        // self.move_selected_entities(g_state, mouse_pos);
-        // TODO Fix by selecting entities and then rpc'ing
+        let dst_pos = win_pos_to_tile(self.mouse_pos, &self.ch);
+
+        for ent_id in &self.selected_entities {
+            self.out_net.ent_move(*ent_id, dst_pos);
+        }
+
+        self.selected_entities.clear();
     }
 
     pub fn get_snap(&self) -> MapSnapshot {
