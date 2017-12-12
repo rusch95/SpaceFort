@@ -100,8 +100,8 @@ impl Server {
 
         let player_join = PlayerJoin::new(player_id, self.g_state.map.size());
         
+        info!("Adding Player {} at addr {:?}", player_id, conn);
         self.net_out.reply_join(player_join, conn);
-
     }
 
     pub fn ent_move(&mut self, ent_id: EntID, pos: Pos) {
