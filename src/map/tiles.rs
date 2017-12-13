@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::fs::File;
 use std::path::Path;
 use std::io::{Read, Write, BufWriter, Error};
@@ -9,6 +10,10 @@ use map::material::{init_materials, MaterialID, Material, Materials};
 
 
 pub type Tiles = Vec<Tile>;
+
+const CHUNK_TILES_X: i32 = 8;
+const CHUNK_TILES_Y: i32 = 8;
+const CHUNK_TILES_Z: i32 = 1;
 
 //TODO Clean up unwraps
 
@@ -122,7 +127,37 @@ impl Map {
         }
     }
 
+    // TODO Add duplication factor
+    pub fn to_chunks(&mut self) -> Vec<MapChunk> {
+        let mut chunks = Vec::<MapChunk>::new();
+        
+        let x_chunks = self.xlen / CHUNK_TILES_X;
+        let y_chunks = self.ylen / CHUNK_TILES_Y;
+        let z_chunks = self.zlen / CHUNK_TILES_Z;
+
+        for dx in 0..x_chunks {
+            for dy in 0..y_chunks {
+                for dz in 0..z_chunks {
+                    let x = dx * CHUNK_TILES_X;
+                    let y = dy * CHUNK_TILES_Y;
+                    let z = dz * CHUNK_TILES_Z;
+                    let pos = (x, y, z);
+
+                    let xlen = min(CHUNK_TILES_X, self.xlen - dx);
+                    let ylen = min(CHUNK_TILES_Y, self.ylen - dy);
+                    let zlen = min(CHUNK_TILES_Z, self.zlen - dz);
+                    let size = (xlen, ylen, zlen);
+
+                    chunks.push(self.get_chunk(pos, size))
+                }
+            }
+        }
+
+        chunks
+    }
+
     pub fn apply_chunk(&mut self, chunk: MapChunk) {
+        info!("Apply chunk");
         let (x0, y0, z0) = chunk.pos;
 
         for z in 0..chunk.zlen {

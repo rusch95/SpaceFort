@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::mpsc::Receiver;
 use std::time::{Duration, Instant};
+use std::thread::sleep;
 
 use map::tiles::Map;
 use game::base::*;
@@ -99,9 +100,20 @@ impl Server {
         self.players.push(ServerPlayer::new(player_id));
 
         let player_join = PlayerJoin::new(player_id, self.g_state.map.size());
-        
+
         info!("Adding Player {} at addr {:?}", player_id, conn);
         self.net_out.reply_join(player_join, conn);
+
+    }
+
+    pub fn send_map(&mut self, player_id: PlayerID) {
+        let chunks = self.g_state.map.to_chunks(); 
+        for chunk in &chunks {
+            sleep(Duration::new(0, 1000));
+            break;
+            self.net_out.send_map_chunk(player_id, chunk);
+            info!("SEND CHUNK");
+        }
     }
 
     pub fn ent_move(&mut self, ent_id: EntID, pos: Pos) {
@@ -125,6 +137,7 @@ impl Server {
         info!("Msg: {:?}", msg);
         match msg {
             ClientMsg::AskJoin() => self.add_player(src),
+            ClientMsg::RequestMap(_) => self.send_map(0),
             ClientMsg::EntMove(ent_id, pos) => self.ent_move(ent_id, pos),
             _ => {},
         }

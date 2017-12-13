@@ -33,7 +33,7 @@ pub struct Client {
     events: Events,
     pub gl: GlGraphics,
     window: Window,
-    out_net: ClientNetOut,
+    net_out: ClientNetOut,
     receiver: Receiver<ServerMsg>,
 
     // State to sync from GameState
@@ -44,14 +44,14 @@ pub struct Client {
 }
 
 pub fn init_client(map: Map, entities: Entities, creature_types: CreatureMap,
-                   out_net: ClientNetOut, receiver: Receiver<ServerMsg>) -> Client {
-    Client::new(0, map, entities, creature_types, out_net, receiver)
+                   net_out: ClientNetOut, receiver: Receiver<ServerMsg>) -> Client {
+    Client::new(0, map, entities, creature_types, net_out, receiver)
 }
 
 impl Client {
     // Top level global state
     pub fn new(player_id: PlayerID, map: Map,  entities: Entities, 
-               creature_types: CreatureMap, out_net: ClientNetOut,
+               creature_types: CreatureMap, net_out: ClientNetOut,
                receiver: Receiver<ServerMsg>) -> Client {
         let mut events = Events::new(EventSettings::new());
         events.set_ups(240);
@@ -68,7 +68,7 @@ impl Client {
             window: init_graphics(),
             events: events,
             gl: GlGraphics::new(OPEN_GL_VERSION),
-            out_net: out_net,
+            net_out: net_out,
             receiver: receiver,
 
             map: map,
@@ -81,8 +81,8 @@ impl Client {
     pub fn start(&mut self) {
         info!("Client Started");
 
-        self.out_net.ask_join();
-        self.out_net.ent_move(-1, (1, 1, 1));
+        self.net_out.ask_join();
+        self.net_out.ent_move(-1, (1, 1, 1));
 
         loop {
             if let Some(e) = self.events.next(&mut self.window) {
@@ -154,7 +154,7 @@ impl Client {
                                 tiles_selector);
                     },
                     SelState::Digging  => {
-                        self.out_net.mark_dig(tiles_selector);
+                        self.net_out.mark_dig(tiles_selector);
                         self.sel_state = SelState::Ents;
                     },
                     SelState::Attack => {
@@ -177,7 +177,7 @@ impl Client {
 
         if let Some(target_id) = targets.pop() {
             for attacker_id in &self.selected_entities {
-                self.out_net.ent_attack(*attacker_id, target_id);
+                self.net_out.ent_attack(*attacker_id, target_id);
             }
         }
 
@@ -188,14 +188,18 @@ impl Client {
         match msg {
             ServerMsg::ReplyJoin(player_join) => self.join(player_join),
             ServerMsg::SendEnts(ent_snaps) => self.update_ents(ent_snaps),
-            _ => {},
+            ServerMsg::SendMapChunk(chunk) => self.map.apply_chunk(chunk),
+            _ => {info!("Received {:?}", msg)},
         };
     }
 
     fn join(&mut self, player_join: PlayerJoin) {
         self.player_id = player_join.player_id;
+        info!("Joined as Player {}", self.player_id);
 
         self.map.resize(player_join.map_dim);
+
+        self.net_out.request_map(((0, 0, 0), (0, 0, 0)));
     }
 
     fn update_ents(&mut self, ent_snaps: EntSnaps) {
@@ -256,7 +260,7 @@ impl Client {
         let dst_pos = win_pos_to_tile(self.mouse_pos, &self.ch);
 
         for ent_id in &self.selected_entities {
-            self.out_net.ent_move(*ent_id, dst_pos);
+            self.net_out.ent_move(*ent_id, dst_pos);
         }
 
         self.selected_entities.clear();

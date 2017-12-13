@@ -54,8 +54,8 @@ impl ServerNetOut {
         self.snd_msg(player_id, ServerMsg::ReplyJoin(player_join));
     }
 
-    pub fn send_map_chunk(&self, player_id: PlayerID, map_chunk: MapChunk) {
-        self.snd_msg(player_id, ServerMsg::SendMapChunk(map_chunk));
+    pub fn send_map_chunk(&self, player_id: PlayerID, map_chunk: &MapChunk) {
+        self.snd_msg(player_id, ServerMsg::SendMapChunk(map_chunk.clone()));
     }
 
     pub fn update_tile(&self, player_id: PlayerID, tile_snap: Tile, pos: Pos) {
@@ -77,7 +77,7 @@ impl ServerNetOut {
                 Err(err) => {error!("{}", err)},
             }
         } else {
-            error!("Could not find PlayerID {} in PlayerIPs", player_id);
+            // error!("Could not find PlayerID {} in PlayerIPs", player_id);
         }
     }
 
