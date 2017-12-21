@@ -6,8 +6,6 @@ extern crate spacefort;
 
 // Std lib imports
 use std::path::Path;
-use std::sync::mpsc::channel;
-use std::thread;
 
 // Local imports
 use spacefort::*;
@@ -26,20 +24,9 @@ fn main() {
     // REFACTOR Maybe should move non-essential inits into init_game
     let map = init_map(root);
     let (entities, creature_types) = init_entities(root);
-    let (in_net, out_net) = init_network();
+    let comm = init_network();
 
-    let (sender, receiver) = channel();
-    let mut game = init_server(map, entities, creature_types, out_net, receiver);
-
-    thread::spawn(move|| {
-        loop {
-            match in_net.rcv() {
-                Ok((msg, src)) => sender.send((msg, src)).unwrap(),
-                Err(_) => {},
-            }
-        }
-    });
-
+    let mut game = init_server(map, entities, creature_types, comm);
     game.start();
 
     info!("Closing server");

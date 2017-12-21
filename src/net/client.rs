@@ -1,39 +1,133 @@
-use net::base::*;
-use std::net::{Ipv4Addr, SocketAddrV4, UdpSocket};
 use std::io;
+use std::io::{Read, Write};
+use std::net::{Ipv4Addr, SocketAddrV4, TcpStream};
+use std::thread;
+use std::sync::mpsc::channel;
 
-use bincode::{serialize, deserialize, Infinite};
+use bincode::{deserialize, serialize, Infinite};
 
 use game::base::*;
 use entities::entity::EntID;
-
-pub struct ClientNetOut {
-    socket: UdpSocket,
-    server: SocketAddrV4,
-}
+use net::base::*;
 
 pub struct ClientNetIn {
-    socket: UdpSocket,
+    pub stream: TcpStream,
+    pub send_incoming: ServerMsgSend,
 }
 
-pub fn init_network() -> (ClientNetIn, ClientNetOut) {
+pub struct ClientNetOut {
+    pub stream: TcpStream,
+    pub recv_outgoing: ClientMsgRecv,
+}
+
+pub struct NetComm {
+    pub send_outgoing: ClientMsgSend,
+    pub recv_incoming: ServerMsgRecv,
+}
+
+
+pub fn init_network() -> NetComm {
     let localhost = Ipv4Addr::new(127, 0, 0, 1);
-    let conn = SocketAddrV4::new(localhost , CLIENT_PORT);
     let server = SocketAddrV4::new(localhost , SERVER_PORT);
-    let socket = UdpSocket::bind(conn).unwrap();
 
-    let net_in = ClientNetIn::new(socket.try_clone().unwrap());
-    let net_out = ClientNetOut::new(socket, server);
+    info!("Connecting to {}", server);
+    let mut stream = TcpStream::connect(server).unwrap();
+    stream.set_nodelay(true);
 
-    (net_in, net_out)
+    let (send_outgoing, recv_outgoing) = channel();
+    let (send_incoming, recv_incoming) = channel();
+
+    let mut net_out = ClientNetOut::new(stream.try_clone().unwrap(), recv_outgoing);
+    let mut net_in = ClientNetIn::new(stream, send_incoming);
+
+    // Outgoing message handler
+    thread::spawn(move|| {
+        net_out.outgoing();
+    });
+            
+    // Incoming message handler
+    thread::spawn(move|| {
+        net_in.incoming();
+    });
+
+    NetComm::new(send_outgoing, recv_incoming)
 }
 
 impl ClientNetOut {
 
-    pub fn new(socket: UdpSocket, server: SocketAddrV4) -> ClientNetOut {
+    pub fn new(stream: TcpStream, recv_outgoing: ClientMsgRecv) -> ClientNetOut {
         ClientNetOut { 
-            socket: socket,
-            server: server,
+            stream: stream,
+            recv_outgoing: recv_outgoing,
+        }
+    }
+
+    pub fn outgoing(&mut self) {
+        loop {
+            if let Ok((msg, player_id)) = self.recv_outgoing.try_recv() {
+                self.snd(msg);
+            };
+        };
+    }
+
+    fn snd(&mut self, msg: ClientMsg) {
+
+        let mut buf = [0u8; MSG_BUF_SIZE];
+        let encoded: Vec<u8> = serialize(&msg, Infinite).unwrap();
+        let enc_size_u8s = usize_to_u8_array(encoded.len());
+        let buf_len = encoded.len() + 4;
+
+        buf[..4].clone_from_slice(&enc_size_u8s);
+        buf[4..buf_len].clone_from_slice(&encoded);
+        let _amt = self.stream.write(&buf[..buf_len]);
+    }
+}
+
+impl ClientNetIn {
+
+    pub fn new(stream: TcpStream, send_incoming: ServerMsgSend) -> ClientNetIn {
+        ClientNetIn { 
+            stream: stream,
+            send_incoming: send_incoming,
+        }
+    }
+
+    pub fn incoming(&mut self) {
+        loop {
+            match self.rcv() {
+                Ok(msg) => { self.send_incoming.send((msg, 0)); },
+                Err(_) => {},            
+            }
+        }
+    }
+
+    pub fn rcv(&mut self) -> Result<ServerMsg, io::Error> {
+        let mut n_buf = [0u8; 4];
+        let mut buf = [0u8; MSG_BUF_SIZE];
+
+        try!(self.stream.read_exact(&mut n_buf));
+        let n = u8_array_to_usize(&n_buf[..], 0);
+        let amt = try!(self.stream.read(&mut buf[..n]));
+
+        let decoded: ServerMsg = deserialize(&buf[..amt]).unwrap();
+
+        Ok(decoded)
+    }
+}
+
+impl NetComm {
+
+    pub fn new(send_outgoing: ClientMsgSend, recv_incoming: ServerMsgRecv) -> NetComm {
+        NetComm { 
+            send_outgoing: send_outgoing,
+            recv_incoming: recv_incoming,
+        }
+    }
+
+    pub fn get_incoming_msgs(&mut self) -> Option<ServerMsg> {
+        match self.recv_incoming.recv() {
+            Ok((msg, _)) => Some(msg),
+            Err(_) => None,
         }
     }
 
@@ -43,10 +137,6 @@ impl ClientNetOut {
 
     pub fn ack(&self) {
         self.snd_msg(ClientMsg::Ack());
-    }
-
-    pub fn ask_join(&self) {
-        self.snd_msg(ClientMsg::AskJoin());
     }
 
     pub fn request_map(&self, selection: (Pos, Pos)) {
@@ -74,33 +164,10 @@ impl ClientNetOut {
     }
 
     pub fn snd_msg(&self, msg: ClientMsg) {
-        match self.snd(msg, self.server) {
-            Ok(_) => {},
-            Err(err) => {error!("{}", err)},
-        }
+        self.send_outgoing.send((msg, 0));
     }
 
-    fn snd(&self, msg: ClientMsg, dest: SocketAddrV4) -> Result<(), io::Error> {
-        let encoded: Vec<u8> = serialize(&msg, Infinite).unwrap();
-        try!(self.socket.send_to(&encoded, dest));
+    pub fn rcv(&self) {
 
-        Ok(())
-    }
-}
-
-impl ClientNetIn {
-
-    pub fn new(socket: UdpSocket) -> ClientNetIn {
-        ClientNetIn { 
-            socket: socket,
-        }
-    }
-
-    pub fn rcv(&self) -> Result<ServerMsg, io::Error> {
-        let mut buf = [0; 512];
-        let (amt, _src) = try!(self.socket.recv_from(&mut buf));
-        let dec_msg: ServerMsg = deserialize(&buf[..amt]).unwrap();
-
-        Ok(dec_msg)
     }
 }

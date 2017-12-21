@@ -5,8 +5,6 @@ extern crate env_logger;
 
 // Std lib imports
 use std::path::Path;
-use std::sync::mpsc::channel;
-use std::thread;
 
 // Local imports
 use spacefort::*;
@@ -24,20 +22,9 @@ fn main() {
 
     let map = blank_map(root);
     let (entities, creature_types) = init_entities(root);
-    let (in_net, out_net) = init_network();
+    let comm = init_network();
 
-    let (sender, receiver) = channel();
-    let mut client = init_client(map, entities, creature_types, out_net, receiver);
-
-    thread::spawn(move|| {
-        loop {
-            match in_net.rcv() {
-                Ok(msg) => sender.send(msg).unwrap(),
-                Err(_) => {},
-            }
-        }
-    });
-
+    let mut client = init_client(map, entities, creature_types, comm);
     client.start();
 
     info!("Closing client");

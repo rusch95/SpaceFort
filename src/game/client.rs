@@ -1,4 +1,3 @@
-use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
 use glutin_window::GlutinWindow as Window;
@@ -16,7 +15,7 @@ use io::utils::*;
 use io::tiles::{render, init_graphics};
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
 use net::base::{ServerMsg, PlayerJoin};
-use net::client::ClientNetOut;
+use net::client::NetComm;
 
 
 pub struct Client {
@@ -33,8 +32,7 @@ pub struct Client {
     events: Events,
     pub gl: GlGraphics,
     window: Window,
-    net_out: ClientNetOut,
-    receiver: Receiver<ServerMsg>,
+    comm: NetComm,
 
     // State to sync from GameState
     pub creature_types: CreatureMap,
@@ -44,15 +42,14 @@ pub struct Client {
 }
 
 pub fn init_client(map: Map, entities: Entities, creature_types: CreatureMap,
-                   net_out: ClientNetOut, receiver: Receiver<ServerMsg>) -> Client {
-    Client::new(0, map, entities, creature_types, net_out, receiver)
+                   comm: NetComm) -> Client {
+    Client::new(0, map, entities, creature_types, comm)
 }
 
 impl Client {
     // Top level global state
     pub fn new(player_id: PlayerID, map: Map,  entities: Entities, 
-               creature_types: CreatureMap, net_out: ClientNetOut,
-               receiver: Receiver<ServerMsg>) -> Client {
+               creature_types: CreatureMap, comm: NetComm) -> Client {
         let mut events = Events::new(EventSettings::new());
         events.set_ups(240);
 
@@ -68,8 +65,7 @@ impl Client {
             window: init_graphics(),
             events: events,
             gl: GlGraphics::new(OPEN_GL_VERSION),
-            net_out: net_out,
-            receiver: receiver,
+            comm: comm,
 
             map: map,
             creature_types: creature_types,
@@ -81,8 +77,7 @@ impl Client {
     pub fn start(&mut self) {
         info!("Client Started");
 
-        self.net_out.ask_join();
-        self.net_out.ent_move(-1, (1, 1, 1));
+        self.comm.ent_move(-1, (1, 1, 1));
 
         loop {
             if let Some(e) = self.events.next(&mut self.window) {
@@ -103,7 +98,7 @@ impl Client {
                     // Network Updates
                     let dur = Duration::new(0, 1000);
 
-                    while let Ok(msg) = self.receiver.recv_timeout(dur) {
+                    while let Some(msg) = self.comm.get_incoming_msgs() {
                         self.dispatch(msg);
                     }
                 }
@@ -154,7 +149,7 @@ impl Client {
                                 tiles_selector);
                     },
                     SelState::Digging  => {
-                        self.net_out.mark_dig(tiles_selector);
+                        self.comm.mark_dig(tiles_selector);
                         self.sel_state = SelState::Ents;
                     },
                     SelState::Attack => {
@@ -177,7 +172,7 @@ impl Client {
 
         if let Some(target_id) = targets.pop() {
             for attacker_id in &self.selected_entities {
-                self.net_out.ent_attack(*attacker_id, target_id);
+                self.comm.ent_attack(*attacker_id, target_id);
             }
         }
 
@@ -199,7 +194,7 @@ impl Client {
 
         self.map.resize(player_join.map_dim);
 
-        self.net_out.request_map(((0, 0, 0), (0, 0, 0)));
+        self.comm.request_map(((0, 0, 0), (0, 0, 0)));
     }
 
     fn update_ents(&mut self, ent_snaps: EntSnaps) {
@@ -260,7 +255,7 @@ impl Client {
         let dst_pos = win_pos_to_tile(self.mouse_pos, &self.ch);
 
         for ent_id in &self.selected_entities {
-            self.net_out.ent_move(*ent_id, dst_pos);
+            self.comm.ent_move(*ent_id, dst_pos);
         }
 
         self.selected_entities.clear();

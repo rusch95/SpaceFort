@@ -1,5 +1,4 @@
-use std::net::SocketAddr;
-use std::sync::mpsc::Receiver;
+use std::net::TcpStream;
 use std::time::{Duration, Instant};
 use std::thread::sleep;
 
@@ -11,17 +10,13 @@ use entities::entity::{do_actions, resolve_dead, schedule_actions};
 use entities::interact::{Action, Tasks};
 use entities::pathfind::{path_to, path_next_to};
 use net::base::{ClientMsg, PlayerJoin};
-use net::server::ServerNetOut;
+use net::server::NetComm;
 
-
-type ClientMsgReceiver = Receiver<(ClientMsg, SocketAddr)>;
 
 pub struct Server {
     pub g_state: GameState,
     pub players: Vec<ServerPlayer>,
-    pub next_player_id: PlayerID,
-    pub net_out: ServerNetOut,
-    pub receiver: ClientMsgReceiver,
+    pub comm: NetComm,
 }
 
 pub struct GameState {
@@ -39,20 +34,18 @@ pub struct ServerPlayer {
 }
 
 pub fn init_server(map: Map, entities: Entities, creature_types: CreatureMap, 
-                   net_out: ServerNetOut, receiver: ClientMsgReceiver) -> Server {
-    Server::new(map, entities, creature_types, net_out, receiver)
+                   comm: NetComm) -> Server {
+    Server::new(map, entities, creature_types, comm)
 }
 
 impl Server {
     // Top level global state
     pub fn new(map: Map, entities: Entities, creature_types: CreatureMap,
-               net_out: ServerNetOut, receiver: ClientMsgReceiver) -> Server {
+               comm: NetComm) -> Server {
         Server {
             g_state: GameState::new(map, entities, creature_types),
             players: vec![ServerPlayer::new(1)],
-            next_player_id: 0,
-            net_out: net_out,
-            receiver: receiver,
+            comm: comm,
         }
     }
 
@@ -76,10 +69,12 @@ impl Server {
             // Network Updates
             self.ent_updates();
 
-            let dur = Duration::new(0, 1000);
-            match self.receiver.recv_timeout(dur) {
-                Ok((msg, src)) => self.dispatch(msg, src),
-                Err(_) => {},
+            while let Some((stream, player_id)) = self.comm.check_incoming_streams() {
+                self.add_player(player_id, stream);
+            }
+
+            while let Some((msg, player_id)) = self.comm.check_incoming_msgs() {
+                self.dispatch(msg, player_id);
             }
         }
     }
@@ -90,20 +85,17 @@ impl Server {
             ent_snaps.push(ent.snap());
         }
         
-        self.net_out.send_ents(0, ent_snaps);
+        self.comm.send_ents(0, ent_snaps);
     }
 
-    pub fn add_player(&mut self, conn: SocketAddr) {
-        let player_id = self.next_player_id;
-        self.next_player_id += 1;
-
+    pub fn add_player(&mut self, player_id: PlayerID, stream: TcpStream) {
         self.players.push(ServerPlayer::new(player_id));
 
         let player_join = PlayerJoin::new(player_id, self.g_state.map.size());
 
-        info!("Adding Player {} at addr {:?}", player_id, conn);
-        self.net_out.reply_join(player_join, conn);
-
+        info!("Adding Player {} at addr {:?}", player_id, stream);
+        self.comm.setup_out_stream((stream, player_id));
+        self.comm.reply_join(player_id, player_join);
     }
 
     pub fn send_map(&mut self, player_id: PlayerID) {
@@ -111,8 +103,10 @@ impl Server {
         for chunk in &chunks {
             sleep(Duration::new(0, 1000));
             break;
-            self.net_out.send_map_chunk(player_id, chunk);
+            /*
+            self.comm.send_map_chunk(player_id, chunk);
             info!("SEND CHUNK");
+            */
         }
     }
 
@@ -132,11 +126,10 @@ impl Server {
         self.g_state.update();
     }
 
-    pub fn dispatch(&mut self, msg: ClientMsg, src: SocketAddr) {
+    pub fn dispatch(&mut self, msg: ClientMsg, player_id: PlayerID) {
 
         info!("Msg: {:?}", msg);
         match msg {
-            ClientMsg::AskJoin() => self.add_player(src),
             ClientMsg::RequestMap(_) => self.send_map(0),
             ClientMsg::EntMove(ent_id, pos) => self.ent_move(ent_id, pos),
             _ => {},
