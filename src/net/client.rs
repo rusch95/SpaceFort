@@ -27,8 +27,8 @@ pub struct NetComm {
 
 
 pub fn init_network() -> NetComm {
-    let localhost = Ipv4Addr::new(127, 0, 0, 1);
-    let server = SocketAddrV4::new(localhost , SERVER_PORT);
+    let server_ip = Ipv4Addr::new(18, 248, 0, 121);
+    let server = SocketAddrV4::new(server_ip, SERVER_PORT);
 
     info!("Connecting to {}", server);
     let mut stream = TcpStream::connect(server).unwrap();
@@ -125,7 +125,7 @@ impl NetComm {
     }
 
     pub fn get_incoming_msgs(&mut self) -> Option<ServerMsg> {
-        match self.recv_incoming.recv() {
+        match self.recv_incoming.try_recv() {
             Ok((msg, _)) => Some(msg),
             Err(_) => None,
         }

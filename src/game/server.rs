@@ -96,17 +96,15 @@ impl Server {
         info!("Adding Player {} at addr {:?}", player_id, stream);
         self.comm.setup_out_stream((stream, player_id));
         self.comm.reply_join(player_id, player_join);
+
+        // self.send_map(player_id);
     }
 
     pub fn send_map(&mut self, player_id: PlayerID) {
         let chunks = self.g_state.map.to_chunks(); 
         for chunk in &chunks {
             sleep(Duration::new(0, 1000));
-            break;
-            /*
-            self.comm.send_map_chunk(player_id, chunk);
-            info!("SEND CHUNK");
-            */
+            // self.comm.send_map_chunk(player_id, chunk);
         }
     }
 

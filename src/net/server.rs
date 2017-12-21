@@ -110,7 +110,8 @@ impl ServerNetOut {
 
     pub fn outgoing(&mut self) {
         loop {
-            if let Ok((msg, player_id)) = self.recv_outgoing.try_recv() {
+            let dur = Duration::new(0, 10000);
+            if let Ok((msg, player_id)) = self.recv_outgoing.recv_timeout(dur) {
                 self.snd(msg, player_id);
             };
         };
@@ -156,7 +157,7 @@ impl NetComm {
     }
 
     pub fn check_incoming_streams(&mut self) -> Option<(TcpStream, PlayerID)> {
-        match self.recv_stream_to_game.recv() {
+        match self.recv_stream_to_game.recv_timeout(Duration::new(0, 10000)) {
             Ok(msg) => Some(msg),
             Err(_) => None,
         }
@@ -167,7 +168,7 @@ impl NetComm {
     }
 
     pub fn check_incoming_msgs(&mut self) -> Option<(ClientMsg, PlayerID)> {
-        match self.recv_incoming.recv() {
+        match self.recv_incoming.recv_timeout(Duration::new(0, 10000)) {
             Ok(msg) => Some(msg),
             Err(_) => None,
         }
