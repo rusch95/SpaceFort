@@ -15,7 +15,7 @@
 * Refactor/Extend, esp. attacking, actions, and goals
 * Polish Selection UI
 * Test Suite
-* Network
+* ~~Network~~
 
 
 0.3 Release - Actually a Game
@@ -47,6 +47,7 @@ Nice Things
 ================
 
 * Remove players if they disconnect
+* Add solo bin, so no need to do server / client shindig
 
 
 Bugs
