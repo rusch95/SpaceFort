@@ -1,6 +1,5 @@
 use std::net::TcpStream;
 use std::time::{Duration, Instant};
-use std::thread::sleep;
 
 use map::tiles::Map;
 use game::base::*;
@@ -85,7 +84,9 @@ impl Server {
             ent_snaps.push(ent.snap());
         }
         
-        self.comm.send_ents(0, ent_snaps);
+        for player in &self.players {
+            self.comm.send_ents(player.player_id, ent_snaps.clone());
+        }
     }
 
     pub fn add_player(&mut self, player_id: PlayerID, stream: TcpStream) {
@@ -97,14 +98,13 @@ impl Server {
         self.comm.setup_out_stream((stream, player_id));
         self.comm.reply_join(player_id, player_join);
 
-        // self.send_map(player_id);
+        self.send_map(player_id);
     }
 
     pub fn send_map(&mut self, player_id: PlayerID) {
         let chunks = self.g_state.map.to_chunks(); 
         for chunk in &chunks {
-            sleep(Duration::new(0, 1000));
-            // self.comm.send_map_chunk(player_id, chunk);
+            self.comm.send_map_chunk(player_id, chunk);
         }
     }
 
@@ -124,9 +124,9 @@ impl Server {
         self.g_state.update();
     }
 
-    pub fn dispatch(&mut self, msg: ClientMsg, player_id: PlayerID) {
-
+    pub fn dispatch(&mut self, msg: ClientMsg, _player_id: PlayerID) {
         info!("Msg: {:?}", msg);
+
         match msg {
             ClientMsg::RequestMap(_) => self.send_map(0),
             ClientMsg::EntMove(ent_id, pos) => self.ent_move(ent_id, pos),

@@ -43,8 +43,13 @@ Feature Stack
 * Render opacity
 
 
+Nice Things
+================
+
+* Remove players if they disconnect
+
+
 Bugs
 =======
 
 * Can't run release mode on windows because of OpenGL issue
-

@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::GlGraphics;
 use piston::event_loop::*;
@@ -96,8 +94,6 @@ impl Client {
 
                 if let Some(_) = e.update_args() {
                     // Network Updates
-                    let dur = Duration::new(0, 1000);
-
                     while let Some(msg) = self.comm.get_incoming_msgs() {
                         self.dispatch(msg);
                     }

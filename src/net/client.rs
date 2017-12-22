@@ -2,6 +2,7 @@ use std::io;
 use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddrV4, TcpStream};
 use std::thread;
+use std::time::Duration;
 use std::sync::mpsc::channel;
 
 use bincode::{deserialize, serialize, Infinite};
@@ -27,12 +28,12 @@ pub struct NetComm {
 
 
 pub fn init_network() -> NetComm {
-    let server_ip = Ipv4Addr::new(18, 248, 0, 121);
+    let server_ip = Ipv4Addr::new(127, 0, 0, 1);
     let server = SocketAddrV4::new(server_ip, SERVER_PORT);
 
     info!("Connecting to {}", server);
-    let mut stream = TcpStream::connect(server).unwrap();
-    stream.set_nodelay(true);
+    let stream = TcpStream::connect(server).unwrap();
+    stream.set_nodelay(true).unwrap();
 
     let (send_outgoing, recv_outgoing) = channel();
     let (send_incoming, recv_incoming) = channel();
@@ -64,7 +65,8 @@ impl ClientNetOut {
 
     pub fn outgoing(&mut self) {
         loop {
-            if let Ok((msg, player_id)) = self.recv_outgoing.try_recv() {
+            let dur = Duration::new(0, 10000);
+            if let Ok((msg, _)) = self.recv_outgoing.recv_timeout(dur) {
                 self.snd(msg);
             };
         };
@@ -95,7 +97,9 @@ impl ClientNetIn {
     pub fn incoming(&mut self) {
         loop {
             match self.rcv() {
-                Ok(msg) => { self.send_incoming.send((msg, 0)); },
+                Ok(msg) => { 
+                    self.send_incoming.send((msg, 0)).unwrap();
+                },
                 Err(_) => {},            
             }
         }
@@ -164,7 +168,7 @@ impl NetComm {
     }
 
     pub fn snd_msg(&self, msg: ClientMsg) {
-        self.send_outgoing.send((msg, 0));
+        self.send_outgoing.send((msg, 0)).unwrap();
     }
 
     pub fn rcv(&self) {

@@ -4,6 +4,7 @@ use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddrV4, TcpListener, TcpStream};
 use std::sync::mpsc::{channel, sync_channel};
 use std::thread;
+use std::time::Duration;
 
 use bincode::{deserialize, serialize, Infinite};
 
@@ -29,7 +30,7 @@ pub fn init_network() -> NetComm {
 
     let localhost = Ipv4Addr::new(127, 0, 0, 1);
     let conn = SocketAddrV4::new(localhost , SERVER_PORT);
-    let mut listener = TcpListener::bind(conn).unwrap();
+    let listener = TcpListener::bind(conn).unwrap();
 
     let (send_outgoing, recv_outgoing) = channel();
     let (send_incoming, recv_incoming) = sync_channel(1024);
@@ -45,13 +46,14 @@ pub fn init_network() -> NetComm {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    stream.set_nodelay(true);
+                    // stream.set_nodelay(true);
 
                     let player_id = next_player_id;
                     next_player_id += 1;
 
                     // Send copy of stream to outgoing
-                    send_stream_to_game.send((stream.try_clone().unwrap(), player_id));
+                    let stream_copy = stream.try_clone().unwrap();
+                    send_stream_to_game.send((stream_copy, player_id)).unwrap();
 
                     let send_in_clone = send_incoming.clone();
                     thread::spawn(move|| {
@@ -78,8 +80,13 @@ pub fn handle_client(mut stream: TcpStream, send_incoming: SyncClientMsgSend,
                      player_id: PlayerID) {
     loop {
         match rcv(&mut stream) {
-            Ok(msg) => { send_incoming.send((msg, player_id)); },
-            Err(_) => {},            
+            Ok(msg) => { 
+                send_incoming.send((msg, player_id)).unwrap();
+            },
+            Err(err) => { 
+                warn!("Client stream err: {}", err);
+                break ;
+            },            
         }
     }
 }
@@ -110,8 +117,7 @@ impl ServerNetOut {
 
     pub fn outgoing(&mut self) {
         loop {
-            let dur = Duration::new(0, 10000);
-            if let Ok((msg, player_id)) = self.recv_outgoing.recv_timeout(dur) {
+            if let Ok((msg, player_id)) = self.recv_outgoing.recv() {
                 self.snd(msg, player_id);
             };
         };
@@ -157,18 +163,20 @@ impl NetComm {
     }
 
     pub fn check_incoming_streams(&mut self) -> Option<(TcpStream, PlayerID)> {
-        match self.recv_stream_to_game.recv_timeout(Duration::new(0, 10000)) {
+        let dur = Duration::from_millis(10);
+        match self.recv_stream_to_game.recv_timeout(dur) {
             Ok(msg) => Some(msg),
             Err(_) => None,
         }
     }
 
     pub fn setup_out_stream(&mut self, msg: (TcpStream, PlayerID)) {
-        self.send_stream_from_game.send(msg);
+        self.send_stream_from_game.send(msg).unwrap();
     }
 
     pub fn check_incoming_msgs(&mut self) -> Option<(ClientMsg, PlayerID)> {
-        match self.recv_incoming.recv_timeout(Duration::new(0, 10000)) {
+        let dur = Duration::from_millis(10);
+        match self.recv_incoming.recv_timeout(dur) {
             Ok(msg) => Some(msg),
             Err(_) => None,
         }
@@ -203,6 +211,6 @@ impl NetComm {
     }
 
     pub fn snd_msg(&self, player_id: PlayerID, msg: ServerMsg) {
-        self.send_outgoing.send((msg, player_id));
+        self.send_outgoing.send((msg, player_id)).unwrap();
     }
 }
