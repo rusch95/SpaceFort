@@ -11,6 +11,7 @@ use game::base::*;
 use entities::entity::EntID;
 use net::base::*;
 
+
 pub struct ClientNetIn {
     pub stream: TcpStream,
     pub send_incoming: ServerMsgSend,
@@ -26,9 +27,7 @@ pub struct NetComm {
     pub recv_incoming: ServerMsgRecv,
 }
 
-
-pub fn init_network() -> NetComm {
-    let server_ip = Ipv4Addr::new(127, 0, 0, 1);
+pub fn init_network(server_ip: Ipv4Addr) -> NetComm {
     let server = SocketAddrV4::new(server_ip, SERVER_PORT);
 
     info!("Connecting to {}", server);

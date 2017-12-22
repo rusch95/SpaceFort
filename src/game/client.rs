@@ -25,6 +25,7 @@ pub struct Client {
     pub selected_entities: Vec<EntID>,
     selector_start: Option<WinPos>, 
     sel_state: SelState,
+    pub done: bool,
     
     // Graphics and IO
     events: Events,
@@ -57,8 +58,9 @@ impl Client {
             selected_entities: Vec::new(),
             mouse_pos: (0.0, 0.0),
             selector: None,
-            sel_state: SelState::Ents,
             selector_start: None,
+            sel_state: SelState::Ents,
+            done: false,
 
             window: init_graphics(),
             events: events,
@@ -102,6 +104,10 @@ impl Client {
                 if let Some(r) = e.render_args() {
                     self.render(&r);
                 }
+            }
+
+            if self.done {
+                break;
             }
         }
     }
@@ -180,6 +186,10 @@ impl Client {
             ServerMsg::ReplyJoin(player_join) => self.join(player_join),
             ServerMsg::SendEnts(ent_snaps) => self.update_ents(ent_snaps),
             ServerMsg::SendMapChunk(chunk) => self.map.apply_chunk(chunk),
+            ServerMsg::Boot() => {
+                warn!("Booted");
+                self.done = true;
+            }
             _ => {info!("Received {:?}", msg)},
         };
     }

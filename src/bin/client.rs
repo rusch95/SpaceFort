@@ -5,6 +5,7 @@ extern crate env_logger;
 
 // Std lib imports
 use std::path::Path;
+use std::net::Ipv4Addr;
 
 // Local imports
 use spacefort::*;
@@ -22,10 +23,10 @@ fn main() {
 
     let map = blank_map(root);
     let (entities, creature_types) = init_entities(root);
-    let comm = init_network();
+    let server_ip = Ipv4Addr::new(127, 0, 0, 1);
+    let comm = init_network(server_ip);
 
-    let mut client = init_client(map, entities, creature_types, comm);
-    client.start();
+    init_client(map, entities, creature_types, comm).start();
 
     info!("Closing client");
 }

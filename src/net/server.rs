@@ -13,6 +13,7 @@ use entities::entity::{EntSnaps};
 use map::tiles::{Tile, MapChunk};
 use net::base::*;
 
+
 pub struct ServerNetOut {
     pub player_conns: HashMap<PlayerID, TcpStream>,
     pub recv_outgoing: ServerMsgRecv,

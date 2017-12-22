@@ -26,8 +26,7 @@ fn main() {
     let (entities, creature_types) = init_entities(root);
     let comm = init_network();
 
-    let mut game = init_server(map, entities, creature_types, comm);
-    game.start();
+    init_server(map, entities, creature_types, comm).start();
 
     info!("Closing server");
 }

@@ -22,7 +22,6 @@ pub type RecvStream = Receiver<(TcpStream, PlayerID)>;
 pub enum ClientMsg {
     Heartbeat(),
     Ack(),
-    Join(PlayerID),
     RequestMap((Pos, Pos)),
     RequestEnts(),
     MarkDig((Pos, Pos)),
@@ -49,7 +48,6 @@ pub struct PlayerJoin {
 }
 
 impl PlayerJoin {
-
     pub fn new(player_id: PlayerID, map_dim: Pos) -> PlayerJoin {
         PlayerJoin { 
             player_id: player_id, 
