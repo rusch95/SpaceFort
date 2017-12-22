@@ -11,8 +11,8 @@ use map::material::{init_materials, MaterialID, Material, Materials};
 
 pub type Tiles = Vec<Tile>;
 
-const CHUNK_TILES_X: i32 = 8;
-const CHUNK_TILES_Y: i32 = 8;
+const CHUNK_TILES_X: i32 = 1;
+const CHUNK_TILES_Y: i32 = 1;
 const CHUNK_TILES_Z: i32 = 1;
 
 //TODO Clean up unwraps
