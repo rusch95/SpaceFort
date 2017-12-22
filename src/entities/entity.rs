@@ -97,9 +97,10 @@ pub fn resolve_dead(entities: &mut Entities) {
     }
 }
 
-pub fn do_actions(entities: &mut Entities, map: &mut Map) {
+pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
     let ent_len = entities.len();
     let mut temp_vec = Actions::new();
+    let mut changes = Vec::<Change>::new();
     for i in 0..entities.len() {
         let (front_ents, _back_ents) = entities.split_at_mut(i);
         let (_ent, back_ents) = _back_ents.split_at_mut(1);
@@ -107,7 +108,7 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) {
         assert_eq!(front_ents.len() + 1 + back_ents.len(), ent_len);
 
         // Swap ent actions out for a null vec to make borrow checker
-        // happy while we do things when ent
+        // happy while we do things with the rest of ent
         mem::swap(&mut ent.actions, &mut temp_vec);
         let pop = match temp_vec.front_mut() {
             Some(act) => {
@@ -118,7 +119,8 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) {
                             ent.pos = pos;
                         },
                         ActionType::Dig(pos) => {
-                            map.dig(pos)
+                            map.dig(pos);
+                            changes.push(Change::TileChange(pos));
                         },
                         ActionType::Attack(ent_id) => {
                             attack(ent, ent_id, front_ents, back_ents)
@@ -135,6 +137,8 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) {
 
         if pop {ent.actions.pop_front();};
     };
+
+    changes
 }
 
 pub fn attack(attacker: &mut Entity, defender_id: EntID,

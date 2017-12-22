@@ -53,3 +53,4 @@ Bugs
 =======
 
 * Can't run release mode on windows because of OpenGL issue
+* Chunking is a bit broken. Make proper tests and fix any small issues.

@@ -47,7 +47,7 @@ pub fn init_network() -> NetComm {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    // stream.set_nodelay(true);
+                    stream.set_nodelay(true);
 
                     let player_id = next_player_id;
                     next_player_id += 1;
@@ -164,8 +164,7 @@ impl NetComm {
     }
 
     pub fn check_incoming_streams(&mut self) -> Option<(TcpStream, PlayerID)> {
-        let dur = Duration::from_millis(10);
-        match self.recv_stream_to_game.recv_timeout(dur) {
+        match self.recv_stream_to_game.try_recv() {
             Ok(msg) => Some(msg),
             Err(_) => None,
         }
@@ -176,8 +175,7 @@ impl NetComm {
     }
 
     pub fn check_incoming_msgs(&mut self) -> Option<(ClientMsg, PlayerID)> {
-        let dur = Duration::from_millis(10);
-        match self.recv_incoming.recv_timeout(dur) {
+        match self.recv_incoming.try_recv() {
             Ok(msg) => Some(msg),
             Err(_) => None,
         }

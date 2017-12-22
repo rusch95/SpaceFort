@@ -2,6 +2,7 @@ use std::cmp::min;
 use std::fs::File;
 use std::path::Path;
 use std::io::{Read, Write, BufWriter, Error};
+use std::mem;
 
 use game::base::*;
 use io::base::CameraHandle;
@@ -11,8 +12,8 @@ use map::material::{init_materials, MaterialID, Material, Materials};
 
 pub type Tiles = Vec<Tile>;
 
-const CHUNK_TILES_X: i32 = 1;
-const CHUNK_TILES_Y: i32 = 1;
+const CHUNK_TILES_X: i32 = 8;
+const CHUNK_TILES_Y: i32 = 8;
 const CHUNK_TILES_Z: i32 = 1;
 
 //TODO Clean up unwraps
@@ -108,6 +109,7 @@ impl Map {
         let (x0, y0, z0) = pos;
         let (xlen, ylen, zlen) = size;
 
+
         let mut tiles = Tiles::new();
         for x in x0..(x0 + xlen) {
             for y in y0..(y0 + ylen) {
@@ -131,9 +133,9 @@ impl Map {
     pub fn to_chunks(&mut self) -> Vec<MapChunk> {
         let mut chunks = Vec::<MapChunk>::new();
         
-        let x_chunks = self.xlen / CHUNK_TILES_X;
-        let y_chunks = self.ylen / CHUNK_TILES_Y;
-        let z_chunks = self.zlen / CHUNK_TILES_Z;
+        let x_chunks = Map::get_num_chunks(self.xlen, CHUNK_TILES_X);
+        let y_chunks = Map::get_num_chunks(self.ylen, CHUNK_TILES_Y);
+        let z_chunks = Map::get_num_chunks(self.zlen, CHUNK_TILES_Z);
 
         for dx in 0..x_chunks {
             for dy in 0..y_chunks {
@@ -143,9 +145,9 @@ impl Map {
                     let z = dz * CHUNK_TILES_Z;
                     let pos = (x, y, z);
 
-                    let xlen = min(CHUNK_TILES_X, self.xlen - dx);
-                    let ylen = min(CHUNK_TILES_Y, self.ylen - dy);
-                    let zlen = min(CHUNK_TILES_Z, self.zlen - dz);
+                    let xlen = min(CHUNK_TILES_X, self.xlen - dx * CHUNK_TILES_X);
+                    let ylen = min(CHUNK_TILES_Y, self.ylen - dy * CHUNK_TILES_Y);
+                    let zlen = min(CHUNK_TILES_Z, self.zlen - dz * CHUNK_TILES_Z);
                     let size = (xlen, ylen, zlen);
 
                     chunks.push(self.get_chunk(pos, size))
@@ -156,18 +158,27 @@ impl Map {
         chunks
     }
 
+    fn get_num_chunks(map_len: i32, chunk_len: i32) -> i32 {
+        if map_len % chunk_len == 0 {
+            map_len / chunk_len
+        } else {
+            map_len / chunk_len + 1
+        }
+    }
+
     pub fn apply_chunk(&mut self, chunk: MapChunk) {
-        info!("Apply chunk");
         let (x0, y0, z0) = chunk.pos;
 
-        for z in 0..chunk.zlen {
+        let mut chunk_i = 0;
+        for x in 0..chunk.xlen {
             for y in 0..chunk.ylen {
-                for x in 0..chunk.xlen {
-                    let chunk_i = (x + y * chunk.xlen + z * chunk.xlen * chunk.ylen) as usize;
-                    let map_i = ((x + x0) + 
-                                 (y + y0) * self.xlen + 
-                                 (z + z0) * self.xlen * self.ylen) as usize;
+                for z in 0..chunk.zlen {
+                    let mx = x + x0;
+                    let my = (y + y0) * self.xlen;
+                    let mz = (z + z0) * self.xlen * self.ylen;
+                    let map_i = (mx + my + mz) as usize;
                     self.tiles[map_i] = chunk.tiles[chunk_i];
+                    chunk_i += 1;
                 }
             }
         }
@@ -195,6 +206,13 @@ impl Map {
             let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
             func(&mut self.tiles[index]);
         }
+    }
+
+    pub fn update_tile(&mut self, new_tile: Tile, pos: Pos) {
+        self.apply_tile_func(pos, |tile| {
+            tile.material = new_tile.material;
+            tile.marked = false;
+        });
     }
 
     pub fn dig(&mut self, pos: Pos) {

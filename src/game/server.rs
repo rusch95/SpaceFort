@@ -1,6 +1,7 @@
 use std::net::TcpStream;
 use std::time::{Duration, Instant};
 use std::collections::HashMap;
+use std::thread;
 
 use map::tiles::Map;
 use game::base::*;
@@ -54,30 +55,40 @@ impl Server {
 
         // Game loop
         let mut now = Instant::now();
-        let mut last_update = now;
         loop {
-            // Player Updates
-            self.player_update();
-
-            // World Updates
-            now = Instant::now();
-            if now.duration_since(last_update) >= Duration::new(0, FRAME_RATE_NS) {
-                last_update = now;
-                self.world_update();
+            // Frame Rate Handler
+            let time_elapsed = now.elapsed();
+            let frame_dur = Duration::new(0, FRAME_RATE_NS);
+            if time_elapsed < frame_dur {
+                thread::sleep(frame_dur - time_elapsed);
             }
+            now = Instant::now();
 
             // Network Updates
-            let player_ids: Vec<PlayerID> = self.players.keys().cloned().collect();
-            for player_id in player_ids {
-                self.ent_updates(player_id);
-            }
-
             while let Some((stream, player_id)) = self.comm.check_incoming_streams() {
                 self.add_player(player_id, stream);
             }
 
             while let Some((msg, player_id)) = self.comm.check_incoming_msgs() {
                 self.dispatch(msg, player_id);
+            }
+
+            // Player Updates
+            self.player_update();
+
+            // World Updates
+            let mut changes = self.world_update();
+
+            for change in changes.drain(..) {
+                match change {
+                    Change::TileChange(pos) => self.tile_update(pos),
+                    Change::EntChange(_) => {},
+                };
+            }
+
+            let player_ids: Vec<PlayerID> = self.players.keys().cloned().collect();
+            for player_id in player_ids {
+                self.ent_updates(player_id);
             }
         }
     }
@@ -89,6 +100,15 @@ impl Server {
         }
         
         self.comm.send_ents(player_id, ent_snaps.clone());
+    }
+
+    fn tile_update(&mut self, pos: Pos) {
+        let tile_snap = self.g_state.map.get_tile(pos).unwrap();
+        let player_ids: Vec<PlayerID> = self.players.keys().cloned().collect();
+
+        for player_id in player_ids {
+            self.comm.update_tile(player_id, tile_snap, pos);
+        }
     }
 
     pub fn add_player(&mut self, player_id: PlayerID, stream: TcpStream) {
@@ -122,8 +142,8 @@ impl Server {
         }
     }
 
-    pub fn world_update(&mut self) {
-        self.g_state.update();
+    pub fn world_update(&mut self) -> Vec<Change> {
+        self.g_state.update()
     }
 
     pub fn dig(&mut self, player_id: PlayerID, selection: (Pos, Pos)) {
@@ -164,12 +184,14 @@ impl GameState {
         }
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self) -> Vec<Change> {
         self.ticks += 1;
 
         // Entity update and pathfinding
-        do_actions(&mut self.entities, &mut self.map);
+        let changes = do_actions(&mut self.entities, &mut self.map);
         resolve_dead(&mut self.entities);
+
+        changes
     }
 
     fn move_ents(&mut self,  ent_ids: &EntIDs, dest_pos: Pos) {
