@@ -48,6 +48,7 @@ Nice Things
 
 * Remove players if they disconnect
 * Add solo bin, so no need to do server / client shindig
+* Have PlayerID and TeamID, so that multiple players can be on the same team
 
 
 Bugs
