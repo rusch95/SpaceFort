@@ -48,6 +48,8 @@ pub struct ProtoCreature {
 // *********************** 
 //
 // TODO Genercize and dedup object, entity, and material 
+// Plan is to have a macro where one can derive the traits
+// for initializing the fields from the raw dumps
 pub fn init_creatures(root: &Path) -> CreatureMap {
     info!("Initializing creatures");
 

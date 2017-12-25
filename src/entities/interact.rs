@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use std::cmp::{min, max};
 
 use map::tiles::Map;
-use entities::entity::{Entities, EntID, EntIDs};
+use entities::entity::{Entities, Entity, EntID, EntIDs};
 use game::base::*;
 use io::base::TilesSelector;
 
@@ -26,47 +26,40 @@ pub enum ActionType {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+/// Actions needing to be done
 pub struct Task {
     pub atype: ActionType,
     pub owner: Option<EntID>,
 }
 
 impl Action {
+    // TODO Unhardcode attack duration
     pub fn attack(ent_id: EntID) -> Action {
         Action { atype: ActionType::Attack(ent_id), duration: 10 }
     }
 }
 
 impl Task {
+    /// Schedule a tile to be dug
+    ///
+    /// # Arguments
+    ///
+    /// * `pos` - The position of the tile to be dug
     fn dig(pos: Pos) -> Task {
         Task { atype: ActionType::Dig(pos), owner: None }
     }
 }
 
 // TODO Refactor into having a filter Predicate supplied
-pub fn select_entities(ents: &Entities, player_id: PlayerID, 
-                       selector: TilesSelector) -> EntIDs {
+pub fn select_entities<F>(f: F, ents: &Entities, 
+                       selector: TilesSelector) -> EntIDs
+    where F: Fn(&Entity) -> bool {
     let (s1, s2) = rotate_selector(selector);
 
     let mut ent_ids = EntIDs::new();
     for ent in ents {
-        if let Some(team_id) = ent.team_id {
-            if team_id == player_id && s1 <= ent.pos && ent.pos <= s2 {
-                ent_ids.push(ent.id);
-            }
-        }
-    }
-    ent_ids
-}
-
-pub fn select_bad_entities(ents: &Entities, player_id: PlayerID,
-                           selector: TilesSelector) -> EntIDs {
-    let (s1, s2) = rotate_selector(selector);
-
-    let mut ent_ids = EntIDs::new();
-    for ent in ents {
-        if let Some(team_id) = ent.team_id {
-            if team_id != player_id && s1 <= ent.pos && ent.pos <= s2 {
+        if s1 <= ent.pos && ent.pos <= s2 {
+            if f(&ent) {
                 ent_ids.push(ent.id);
             }
         }
@@ -77,7 +70,6 @@ pub fn select_bad_entities(ents: &Entities, player_id: PlayerID,
 pub fn add_dig_tasks(tasks: &mut Tasks, map: &mut Map, selector: TilesSelector) {
     let ((x1, y1, z1), (x2, y2, z2)) = rotate_selector(selector);
 
-    // TODO Fix double dig
     for x in x1..(x2 + 1) {
         for y in y1..(y2 + 1) {
             for z in z1..(z2 + 1) {
@@ -91,6 +83,7 @@ pub fn add_dig_tasks(tasks: &mut Tasks, map: &mut Map, selector: TilesSelector) 
 }
 
 // Make top left corner first element and bottom left corner second element
+/// Re-paramaterize the rectangular selection as the bottomost corner and topmost corner
 fn rotate_selector(selector: TilesSelector) -> TilesSelector {
     let ((x1, y1, z1), (x2, y2, z2)) = selector;
     let nx1 = min(x1, x2);

@@ -4,7 +4,6 @@ use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddrV4, TcpListener, TcpStream};
 use std::sync::mpsc::{channel, sync_channel};
 use std::thread;
-use std::time::Duration;
 
 use bincode::{deserialize, serialize, Infinite};
 
@@ -47,7 +46,8 @@ pub fn init_network() -> NetComm {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    stream.set_nodelay(true);
+                    info!("New client at {:?}", stream);
+                    stream.set_nodelay(true).unwrap();
 
                     let player_id = next_player_id;
                     next_player_id += 1;
@@ -58,7 +58,6 @@ pub fn init_network() -> NetComm {
 
                     let send_in_clone = send_incoming.clone();
                     thread::spawn(move|| {
-                        info!("New client");
                         // Tell the game that  a new player has joined
                         handle_client(stream, send_in_clone, player_id);
                     });

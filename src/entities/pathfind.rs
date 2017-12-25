@@ -70,6 +70,7 @@ fn succ(map: &Map, pos: &Pos) -> Vec<(Pos, i32)> {
     };
 
     // Up and down
+    // TODO Fix this as part of the ramp/stairs refactor
     if let Some(tile) = map.get_tile((x, y, z)) {
         match tile.material {
             8 => successors.push(((x, y, z - 1), UNIT_DIST)),

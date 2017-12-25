@@ -2,7 +2,6 @@ use std::cmp::min;
 use std::fs::File;
 use std::path::Path;
 use std::io::{Read, Write, BufWriter, Error};
-use std::mem;
 
 use game::base::*;
 use io::base::CameraHandle;

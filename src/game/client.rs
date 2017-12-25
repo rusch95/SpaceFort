@@ -5,7 +5,7 @@ use piston::input::*;
 
 use entities::creatures::CreatureMap;
 use entities::entity::{Entities, EntID, EntSnaps};
-use entities::interact::{select_entities, select_bad_entities};
+use entities::interact::{select_entities};
 use game::base::*;
 use io::base::*;
 use io::constants::*;
@@ -17,14 +17,17 @@ use net::client::NetComm;
 
 
 pub struct Client {
-    pub player_id: PlayerID,
+    pub player_id: Option<PlayerID>,
 
     pub ch: CameraHandle,
     mouse_pos: WinPos,
     pub selector: Option<Selector>,
     pub selected_entities: Vec<EntID>,
+    // The starting coordinate for the selection rectangle
     selector_start: Option<WinPos>, 
+    // State for the selection state machine
     sel_state: SelState,
+    // Whether the client is finished or not, such as if it has been booted by the server
     pub done: bool,
     
     // Graphics and IO
@@ -42,18 +45,19 @@ pub struct Client {
 
 pub fn init_client(map: Map, entities: Entities, creature_types: CreatureMap,
                    comm: NetComm) -> Client {
-    Client::new(0, map, entities, creature_types, comm)
+    Client::new(map, entities, creature_types, comm)
 }
 
 impl Client {
     // Top level global state
-    pub fn new(player_id: PlayerID, map: Map,  entities: Entities, 
+    pub fn new(map: Map,  entities: Entities, 
                creature_types: CreatureMap, comm: NetComm) -> Client {
         let mut events = Events::new(EventSettings::new());
         events.set_ups(240);
 
         Client {
-            player_id: player_id,
+            // Start with none and initialize when connected
+            player_id: None,
             ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
             selected_entities: Vec::new(),
             mouse_pos: (0.0, 0.0),
@@ -75,9 +79,7 @@ impl Client {
     }
 
     pub fn start(&mut self) {
-        info!("Client Started");
-
-        self.comm.ent_move(-1, (1, 1, 1));
+        info!("Starting client");
 
         loop {
             if let Some(e) = self.events.next(&mut self.window) {
@@ -146,8 +148,8 @@ impl Client {
                     SelState::Ents => {
                         self.selected_entities = 
                             select_entities(
+                                |ent| ent.team_id == self.player_id,
                                 &self.entities, 
-                                self.player_id,
                                 tiles_selector);
                     },
                     SelState::Digging  => {
@@ -167,9 +169,9 @@ impl Client {
     }
 
     fn add_attack_goal(&mut self, tiles_selector: TilesSelector) {
-        let mut targets = select_bad_entities(
+        let mut targets = select_entities(
+                              |ent| ent.team_id != self.player_id,
                               &self.entities,
-                              self.player_id,
                               tiles_selector);
 
         if let Some(target_id) = targets.pop() {
@@ -196,8 +198,8 @@ impl Client {
     }
 
     fn join(&mut self, player_join: PlayerJoin) {
-        self.player_id = player_join.player_id;
-        info!("Joined as Player {}", self.player_id);
+        self.player_id = Some(player_join.player_id);
+        info!("Joined as Player {}", player_join.player_id);
 
         self.map.resize(player_join.map_dim);
 

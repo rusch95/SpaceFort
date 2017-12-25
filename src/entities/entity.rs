@@ -16,18 +16,26 @@ pub type Health = i32;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Entity {
+    // Id unique to each entity
     pub id: EntID,
+    // Id referring to the creature type for creature properties lookup
     pub creature_id: CreatureID,
+    // The entity's position in space
     pub pos: Pos,
+    // The Id of the team that the entity belongs to
     pub team_id: TeamID,
+    // The stack of actions that the entity has to do
     pub actions: Actions,
+    // The current thing the entity wants to do e.g. attack foo or build foo
     pub goal: Option<ActionType>,
+    // Hit points
     pub health: Health,
+    // Dead or alive
     pub alive: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq)]
-// Smaller Ent for sending to clients for printing
+// A subset of the fields of Entity which is sent to clients for display
 pub struct EntSnap {
     pub id: EntID,
     pub creature_id: CreatureID,
@@ -69,6 +77,9 @@ pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
     let creature_types = init_creatures(root);
     let mut ents = Entities::new();
 
+    // TODO Get rid of this static shit and have
+    // entities spawn via an actual process like
+    // maybe whenever a player joins
     let entity1 = Entity::new(-1, 1, (7, 7, 0), 1);
     let entity2 = Entity::new(-2, 1, (3, 3, 0), 1);
     let entity3 = Entity::new(-3, 1, (4, 4, 0), 1);
@@ -88,34 +99,47 @@ pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
 
 pub fn resolve_dead(entities: &mut Entities) {
     // For now just mark dead as not having a team
-    // Will turn the dead into items in future iterations
+    // and clear their pending actions
+    // TODO Turn the dead into items and drop their items
+    // and any other magic
 
     for ent in entities {
-        if ent.alive == false {
+        if ent.health < 0 || ent.alive == false {
+            ent.alive = false;
             ent.team_id = None;
+            ent.goal = None;
+            ent.actions.clear();
         }
     }
 }
 
 pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
-    let ent_len = entities.len();
     let mut temp_vec = Actions::new();
+    // Changes keeps track of what was dug and who moved,
+    // such that this can be used to selectively send 
+    // updates to the clients
+    // TODO Poss. investigate making generating a changes this immutably
+    // and then applying all of the necessary changes
     let mut changes = Vec::<Change>::new();
-    for i in 0..entities.len() {
+    let ent_len = entities.len();
+    for i in 0..ent_len {
         let (front_ents, _back_ents) = entities.split_at_mut(i);
         let (_ent, back_ents) = _back_ents.split_at_mut(1);
         let ent = &mut _ent[0];
         assert_eq!(front_ents.len() + 1 + back_ents.len(), ent_len);
 
-        // Swap ent actions out for a null vec to make borrow checker
-        // happy while we do things with the rest of ent
+        // Swap ent actions out with an empty vec to make borrow checker
+        // happy while we do things with the rest of the ent
         mem::swap(&mut ent.actions, &mut temp_vec);
-        let pop = match temp_vec.front_mut() {
+        // Check if task is done
+        let task_done = match temp_vec.front_mut() {
             Some(act) => {
                 if act.duration > 0 {act.duration -= 1; false}
                 else {
                     match act.atype {
                         ActionType::Move(pos) => {
+                            // TODO Add validation testing
+                            // Shouldn't move on to invalid tile
                             ent.pos = pos;
                         },
                         ActionType::Dig(pos) => {
@@ -123,7 +147,10 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
                             changes.push(Change::TileChange(pos));
                         },
                         ActionType::Attack(ent_id) => {
-                            attack(ent, ent_id, front_ents, back_ents)
+                            // As the ent list is split, we have have
+                            // to search both for the target
+                            attack(ent, ent_id, front_ents);
+                            attack(ent, ent_id, back_ents);
                         },
                         _ => {},
                     };
@@ -135,34 +162,32 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
         };
         mem::swap(&mut ent.actions, &mut temp_vec);
 
-        if pop {ent.actions.pop_front();};
+        // And then pop a task if it is done
+        if task_done {ent.actions.pop_front();};
     };
 
     changes
 }
 
-pub fn attack(attacker: &mut Entity, defender_id: EntID,
-              left_ents: &mut [Entity], right_ents: &mut [Entity]) {
-    if let Some(defender) = left_ents.iter_mut()
-                                     .find(|ref ent| ent.id == defender_id) {
-        defender.health -= 40;
-        if defender.health < 0 {
-            defender.alive = false;
-        }
-    } else if let Some(defender) = right_ents.iter_mut()
-                                      .find(|ref ent| ent.id == defender_id) {
-        defender.health -= 40;
-        if defender.health < 0 {
-            defender.alive = false;
-        }
+pub fn attack(attacker: &mut Entity, target_id: EntID, ents: &mut [Entity]) {
+    // TODO Big changes. Use attack attributes from the creatures
+    // file instead of a hardcoded 40. Make attackers repath if the
+    // target moves. Check the the attacker is adjacent to the target
+
+    // TODO Swap this thing out for creature properties
+    let damage = 40;
+    if let Some(target) = ents.iter_mut()
+                              .find(|ref ent| ent.id == target_id) {
+        target.health -= damage;
     }
 }
 
-pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, 
-                        map: &Map, creature_types: &CreatureMap) {
+pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, map: &Map, 
+                        creature_types: &CreatureMap, team_id: TeamID) {
     for ent in entities {
-        if ent.actions.is_empty() {
+        if ent.actions.is_empty() && ent.team_id == team_id {
             for task in tasks.iter_mut() {
+                // If a task is not owned by anyone, assign it to some entitiy
                 if task.owner == None {
                     task.owner = Some(ent.id);
                     ent.actions = schedule_action(map, ent, 
@@ -177,6 +202,8 @@ pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks,
 
 fn schedule_action(map: &Map, ent: &Entity, creature_types: &CreatureMap, 
                    atype: ActionType) -> Actions {
+    // Enumerate the actions the a task requires, so that they can be 
+    // added to the target entities actions queue
     let mut actions = Actions::new();
     match atype {
         ActionType::Dig(pos) => {

@@ -138,7 +138,8 @@ impl Server {
     pub fn player_update(&mut self) {
         for player in self.players.values_mut() {
             schedule_actions(&mut self.g_state.entities, &mut player.tasks,
-                             &mut self.g_state.map, &self.g_state.creature_types)
+                             &mut self.g_state.map, &self.g_state.creature_types,
+                             Some(player.player_id))
         }
     }
 
@@ -240,5 +241,4 @@ impl ServerPlayer {
             }
         }
     }
-
 }

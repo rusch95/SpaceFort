@@ -63,6 +63,7 @@ fn draw_entities(c: Context, gl: &mut GlGraphics,
     }
 }
 
+/// Outline each entity in it's team's color
 fn team_color(team_id: TeamID) -> Color {
     match team_id {
         Some(1) => BLUE,
@@ -71,6 +72,7 @@ fn team_color(team_id: TeamID) -> Color {
     }
 }
         
+/// Draw the current mouse selection
 fn draw_selector(c: Context, gl: &mut GlGraphics, selector: Option<Selector>) {
     if let Some(((x1, y1), (x2, y2))) = selector {
         let selector_rect = [x1, y1, x2 - x1, y2 - y1];

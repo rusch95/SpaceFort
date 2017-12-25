@@ -17,8 +17,10 @@ use net::server::init_network;
 
 fn main() {   
     env_logger::init().unwrap();
-    info!("Starting server binary");
+    info!("Initializing server");
 
+    // Root points to the directory containing
+    // static where assets are loaded from
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
 
     // REFACTOR Maybe should move non-essential inits into init_game
