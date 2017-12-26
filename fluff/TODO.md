@@ -15,6 +15,10 @@
 * Refactor/Extend, esp. attacking, actions, and goals
 * Polish Selection UI
 * Test Suite
+* Restore ascii to functionality
+    - Important for hacker types
+* Add a webclient
+    - Makes it trivial to showcase the game to new people 
 * ~~Network~~
 
 
@@ -26,7 +30,6 @@
 * Buildings
 * Macro up the toml loading
 * Fix pathfinding int hack
-* Restore ascii to functionality
 * Early Procedural Generation
 * Better Map Editor
 * Ramps and Floors as property
