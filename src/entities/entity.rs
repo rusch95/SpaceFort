@@ -94,7 +94,7 @@ impl Entity {
         let (sx, sy, sz)  = self.pos;
         let (ex, ey, ez) = ent.pos;
 
-        (sx - ex).abs() <= 1 || (sy - ey).abs() <= 1 || (sz - ez).abs() <= 1 
+        (sx - ex).abs() <= 1 && (sy - ey).abs() <= 1 && (sz - ez).abs() <= 1 
     }
 
     pub fn schedule_action(&self, map: &Map, creature_types: &CreatureMap, 

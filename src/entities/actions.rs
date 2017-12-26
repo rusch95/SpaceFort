@@ -72,7 +72,6 @@ impl Task {
     }
 }
 
-// TODO Refactor into having a filter Predicate supplied
 pub fn select_entities<F>(pred: F, ents: &[Entity], 
                        selector: TilesSelector) -> EntIDs
     where F: Fn(&Entity) -> bool {
