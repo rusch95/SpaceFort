@@ -62,9 +62,7 @@ fn draw_tiles(c: Context, gl: &mut GlGraphics,
             let ypos = Y_PIXELS * f64::from(y);
             let transform = c.transform.trans(xpos, ypos);
             let color = match map.materials.get(&tile.material) {
-                Some(material) => {
-                    material.color
-                },
+                Some(material) => { material.color },
                 None => BLACK,
             };
             rectangle(color, square, transform, gl);

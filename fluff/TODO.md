@@ -10,7 +10,8 @@
 ==============================
 
 * ~~Network~~
-* Highlight selected units
+* ~~Highlight selected units~~
+* Click to select single unit
 * Make attack correct and add chance
 * Tileset
 * Unit spawning in section when player joins
