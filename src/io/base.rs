@@ -16,6 +16,15 @@ pub struct CameraHandle {
     pub z: i32,
 }
 
+impl CameraHandle {
+    pub fn in_bounds(&self, pos: &Pos) -> bool {
+        let (x, y, z) = *pos;
+        z == self.z &&
+        (self.x <= x) && (x <= self.x + self.xlen) &&
+        (self.y <= y) && (y <= self.y + self.ylen)
+    }
+}
+
 pub type WinPos = (f64, f64);
 pub type Selector = (WinPos, WinPos);
 pub type TilesSelector = (Pos, Pos);

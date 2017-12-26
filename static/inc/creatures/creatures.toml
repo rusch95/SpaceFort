@@ -4,6 +4,7 @@ id = 0
 texture = ""
 health = 0
 stregth = 0
+attack_speed = 1
 attacks = []
 dig_speed = 100
 movement_speed = 100
@@ -47,5 +48,5 @@ color = [0.1,0.9,0.1,1.0]
 [[creatures]]
 name = "troll"
 id = 3
-template = "default"
+template = "humanoid"
 color = [0.1,0.1,0.9,1.0]

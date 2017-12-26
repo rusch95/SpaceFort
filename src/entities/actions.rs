@@ -3,6 +3,7 @@ use std::cmp::{min, max};
 
 use map::tiles::Map;
 use entities::entity::{Entity, EntID, EntIDs};
+use entities::creatures::{CreatureID, CreatureMap, attack_speed, dig_speed};
 use game::base::*;
 use io::base::TilesSelector;
 
@@ -20,9 +21,15 @@ pub struct Action {
 pub enum ActionType {
     Move(Pos),
     Dig(Pos),
-    Attack(EntID),
+    Attack(AttackType, EntID),
     #[allow(dead_code)]
     Wait,
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum AttackType {
+    Bite,
+    Punch,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -33,9 +40,24 @@ pub struct Task {
 }
 
 impl Action {
+
+    pub fn new(atype: ActionType, duration: Ticks) -> Action {
+        Action { 
+            atype: atype,
+            duration: duration,
+        }
+    }
+
+    pub fn dig(pos: Pos, creature_id: &CreatureID, creature_types: &CreatureMap) -> Action {
+        Action::new(ActionType::Dig(pos), 
+                    dig_speed(creature_id, creature_types))
+    }
+
     // TODO Unhardcode attack duration
-    pub fn attack(ent_id: EntID) -> Action {
-        Action { atype: ActionType::Attack(ent_id), duration: 10 }
+    pub fn attack(ent_id: EntID, creature_id: &CreatureID, 
+                  creature_types: &CreatureMap) -> Action {
+        Action::new(ActionType::Attack(AttackType::Bite, ent_id),
+                    attack_speed(creature_id, creature_types))
     }
 }
 

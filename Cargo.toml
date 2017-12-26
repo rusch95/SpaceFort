@@ -8,6 +8,7 @@ bincode = "0.9"
 clippy = {version = "*", optional = true}
 log = "0.3"
 env_logger = "*"
+ordered-float = "0.5.0"
 pathfinding = ">=0.1"
 piston = ">=0.32"
 piston2d-graphics = ">=0.21"

@@ -24,6 +24,7 @@ pub struct Creature {
     pub name: String,
     pub id: CreatureID,
     pub texture: Option<String>,
+    pub attack_speed: Ticks,
     pub dig_speed: Ticks,
     pub movement_speed: Ticks,
     pub color: [f32; 4],
@@ -36,6 +37,7 @@ pub struct ProtoCreature {
     pub id: CreatureID,
     pub template: Option<String>,
     pub texture: Option<String>,
+    pub attack_speed: Option<Ticks>,
     pub dig_speed: Option<Ticks>,
     pub movement_speed: Option<Ticks>,
     pub color: Option<[f32; 4]>,
@@ -89,6 +91,7 @@ fn resolve(proto: &ProtoCreature, proto_map: &ProtoCreatureMap,
                 name:           proto.name.clone(),
                 id:             proto.id,
                 texture:        None,  // FIXME
+                attack_speed:   proto.dig_speed.unwrap(),
                 dig_speed:      proto.dig_speed.unwrap(),
                 movement_speed: proto.movement_speed.unwrap(),
                 alt:            proto.alt.unwrap(),
@@ -110,6 +113,9 @@ fn resolve(proto: &ProtoCreature, proto_map: &ProtoCreatureMap,
             new_creat.id = proto.id;
             if let Some(texture) = proto.texture.clone() {
                 new_creat.texture = Some(texture);
+            }
+            if let Some(attack_speed) = proto.attack_speed {
+                new_creat.attack_speed = attack_speed;
             }
             if let Some(dig_speed) = proto.dig_speed {
                 new_creat.dig_speed = dig_speed;
@@ -133,6 +139,14 @@ fn resolve(proto: &ProtoCreature, proto_map: &ProtoCreatureMap,
 // Functions to Lookup Stuff in CreatureMap
 //
 // ************************
+
+pub fn attack_speed(creature_id: &CreatureID, creature_types: &CreatureMap) -> Ticks {
+    if let Some(creature) = creature_types.get(creature_id) {
+        creature.attack_speed
+    } else {
+        0
+    }
+}
 
 pub fn dig_speed(creature_id: &CreatureID, creature_types: &CreatureMap) -> Ticks {
     if let Some(creature) = creature_types.get(creature_id) {

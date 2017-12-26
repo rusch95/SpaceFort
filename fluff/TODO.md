@@ -9,35 +9,42 @@
 0.2 Release - Fun Demo
 ==============================
 
+* ~~Network~~
+* Highlight selected units
+* Make attack correct and add chance
 * Tileset
-* Ambient Movement
-* More creatures
-* Refactor/Extend, esp. attacking, actions, and goals
-* Polish Selection UI
-* Test Suite
+* Unit spawning in section when player joins
+* Buildings that spawn units
+
+
+0.3 Release - Cool / Technical Debt Demo
+=============================
+
+* Extend test suite
+* Map Editor
+* Ramps and Floors as property
+* Macro up the toml loading
 * Restore ascii to functionality
     - Important for hacker types
 * Add a webclient
     - Makes it trivial to showcase the game to new people 
-* ~~Network~~
+* Test Suite
 
 
-0.3 Release - Actually a Game
+0.4 Release - Actually a Game
 ==============================
 
+* More creatures
 * Start Menu
 * Items
-* Buildings
-* Macro up the toml loading
 * Fix pathfinding int hack
 * Early Procedural Generation
-* Better Map Editor
-* Ramps and Floors as property
 
 
 Feature Stack
 =================
 
+* Ambient Movement
 * Add momentum changing cost to pathfinding
 * Physics
 * Liquids

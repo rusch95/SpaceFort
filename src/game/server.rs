@@ -152,7 +152,8 @@ impl Server {
         }
     }
 
-    pub fn attack(&mut self, player_id: PlayerID, attacker: EntID, defender: EntID) {
+    pub fn attack(&mut self, player_id: PlayerID, attacker: EntID, 
+                  defender: EntID) {
         if let Some(player) = self.players.get_mut(&player_id) {
             player.ents_attack(&[attacker], defender, &mut self.g_state);
         }
@@ -235,7 +236,8 @@ impl ServerPlayer {
                     ent.actions = path_next_to(&g_state.map, ent,
                                                &g_state.creature_types,
                                                target.pos);
-                    ent.actions.push_back(Action::attack(target_id));
+                    ent.actions.push_back(Action::attack(target_id, &ent.creature_id,
+                                                         &g_state.creature_types));
                 }
             }
         }

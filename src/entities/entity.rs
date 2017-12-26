@@ -1,9 +1,9 @@
 use std::path::Path;
 use std::mem;
 
-use entities::actions::{Action, Actions, ActionType, Tasks};
+use entities::actions::{Action, Actions, ActionType, AttackType, Tasks};
 use entities::pathfind::path_next_to;
-use entities::creatures::{CreatureID, CreatureMap, init_creatures, dig_speed};
+use entities::creatures::{CreatureID, CreatureMap, init_creatures};
 use game::base::*;
 use map::tiles::Map;
 
@@ -67,6 +67,52 @@ impl Entity {
             team_id: self.team_id,
             health: self.health,
             alive: self.alive,
+        }
+    }
+
+    pub fn attack(&mut self, target_id: EntID, ents: &mut [Entity], attack_type: AttackType) {
+        // TODO Big changes. Use attack attributes from the creatures
+        // file instead of a hardcoded 40. Make attackers repath if the
+        // target moves. Check the the attacker is adjacent to the target
+
+        // TODO Swap this thing out for creature properties
+        use self::AttackType::*;
+
+        let damage = match attack_type {
+            _ => 40,
+        };
+
+        if let Some(target) = ents.iter_mut()
+                                  .find(|ent| ent.id == target_id) {
+            if self.is_adjacent(target) {
+                target.health -= damage;
+            }
+        }
+    }
+
+    fn is_adjacent(&self, ent: &Entity) -> bool {
+        let (sx, sy, sz)  = self.pos;
+        let (ex, ey, ez) = ent.pos;
+
+        (sx - ex).abs() <= 1 || (sy - ey).abs() <= 1 || (sz - ez).abs() <= 1 
+    }
+
+    pub fn schedule_action(&self, map: &Map, creature_types: &CreatureMap, 
+                       atype: ActionType) -> Actions {
+        // Enumerate the actions the a task requires, so that they can be 
+        // added to the target entities actions queue
+        let mut actions = Actions::new();
+        match atype {
+            ActionType::Dig(pos) => {
+                let path = path_next_to(map, &self, creature_types, pos);
+                if !path.is_empty() {
+                    actions.extend(path);
+                    actions.push_back(Action::dig(pos, &self.creature_id, creature_types));
+                }
+
+                actions
+            }
+            _ => panic!("Not covered")
         }
     }
 }
@@ -146,11 +192,11 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
                             map.dig(pos);
                             changes.push(Change::TileChange(pos));
                         },
-                        ActionType::Attack(ent_id) => {
+                        ActionType::Attack(attack_type, ent_id) => {
                             // As the ent list is split, we have have
                             // to search both for the target
-                            attack(ent, ent_id, front_ents);
-                            attack(ent, ent_id, back_ents);
+                            ent.attack(ent_id, front_ents, attack_type);
+                            ent.attack(ent_id, back_ents, attack_type);
                         },
                         _ => {},
                     };
@@ -169,19 +215,6 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
     changes
 }
 
-pub fn attack(attacker: &mut Entity, target_id: EntID, ents: &mut [Entity]) {
-    // TODO Big changes. Use attack attributes from the creatures
-    // file instead of a hardcoded 40. Make attackers repath if the
-    // target moves. Check the the attacker is adjacent to the target
-
-    // TODO Swap this thing out for creature properties
-    let damage = 40;
-    if let Some(target) = ents.iter_mut()
-                              .find(|ent| ent.id == target_id) {
-        target.health -= damage;
-    }
-}
-
 pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, map: &Map, 
                         creature_types: &CreatureMap, team_id: TeamID) {
     for ent in entities {
@@ -190,32 +223,11 @@ pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, map: &Map,
                 // If a task is not owned by anyone, assign it to some entitiy
                 if task.owner == None {
                     task.owner = Some(ent.id);
-                    ent.actions = schedule_action(map, ent, 
-                                                  creature_types, 
-                                                  task.atype);
+                    ent.actions = ent.schedule_action(map, creature_types, 
+                                                      task.atype);
                     break;
                 }
             }
         }
     }
-}
-
-fn schedule_action(map: &Map, ent: &Entity, creature_types: &CreatureMap, 
-                   atype: ActionType) -> Actions {
-    // Enumerate the actions the a task requires, so that they can be 
-    // added to the target entities actions queue
-    let mut actions = Actions::new();
-    match atype {
-        ActionType::Dig(pos) => {
-            let path = path_next_to(map, ent, creature_types, pos);
-            if !path.is_empty() {
-                actions.extend(path_next_to(map, ent, creature_types, pos));
-                actions.push_back(Action{ atype: ActionType::Dig(pos), 
-                                          duration: dig_speed(&ent.creature_id, creature_types) });
-            }
-        }
-        _ => (),
-    }
-
-    actions
 }
