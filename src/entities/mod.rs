@@ -1,4 +1,4 @@
 pub mod entity;
-pub mod interact;
+pub mod actions;
 pub mod pathfind;
 pub mod creatures;

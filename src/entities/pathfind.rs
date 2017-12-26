@@ -1,6 +1,6 @@
 use game::base::Pos;
 use map::tiles::Map;
-use entities::interact::{Action, Actions, ActionType};
+use entities::actions::{Action, Actions, ActionType};
 use entities::entity::Entity;
 use entities::creatures::{CreatureMap, movement_speed};
 

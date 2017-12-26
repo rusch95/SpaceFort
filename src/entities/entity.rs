@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::mem;
 
-use entities::interact::{Action, Actions, ActionType, Tasks};
+use entities::actions::{Action, Actions, ActionType, Tasks};
 use entities::pathfind::path_next_to;
 use entities::creatures::{CreatureID, CreatureMap, init_creatures, dig_speed};
 use game::base::*;

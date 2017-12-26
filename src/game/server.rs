@@ -8,7 +8,7 @@ use game::base::*;
 use entities::creatures::CreatureMap;
 use entities::entity::{Entity, Entities, EntSnaps, EntID, EntIDs};
 use entities::entity::{do_actions, resolve_dead, schedule_actions};
-use entities::interact::{Action, Tasks, add_dig_tasks};
+use entities::actions::{Action, Tasks, add_dig_tasks};
 use entities::pathfind::{path_to, path_next_to};
 use net::base::{ClientMsg, PlayerJoin};
 use net::server::NetComm;

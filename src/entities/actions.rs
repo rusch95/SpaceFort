@@ -51,20 +51,17 @@ impl Task {
 }
 
 // TODO Refactor into having a filter Predicate supplied
-pub fn select_entities<F>(f: F, ents: &Entities, 
+pub fn select_entities<F>(pred: F, ents: &Entities, 
                        selector: TilesSelector) -> EntIDs
     where F: Fn(&Entity) -> bool {
     let (s1, s2) = rotate_selector(selector);
 
-    let mut ent_ids = EntIDs::new();
-    for ent in ents {
-        if s1 <= ent.pos && ent.pos <= s2 {
-            if f(&ent) {
-                ent_ids.push(ent.id);
-            }
-        }
-    }
-    ent_ids
+    ents.iter()
+        .filter(|ent| s1 <= ent.pos && 
+                ent.pos <= s2 && 
+                pred(ent))
+        .map(|ent| ent.id)
+        .collect()
 }
 
 pub fn add_dig_tasks(tasks: &mut Tasks, map: &mut Map, selector: TilesSelector) {

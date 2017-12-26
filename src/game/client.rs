@@ -5,7 +5,7 @@ use piston::input::*;
 
 use entities::creatures::CreatureMap;
 use entities::entity::{Entities, EntID, EntSnaps};
-use entities::interact::{select_entities};
+use entities::actions::{select_entities};
 use game::base::*;
 use io::base::*;
 use io::constants::*;

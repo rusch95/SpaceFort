@@ -2,7 +2,6 @@ use std::io;
 use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddrV4, TcpStream};
 use std::thread;
-use std::time::Duration;
 use std::sync::mpsc::channel;
 
 use bincode::{deserialize, serialize, Infinite};
@@ -64,8 +63,7 @@ impl ClientNetOut {
 
     pub fn outgoing(&mut self) {
         loop {
-            let dur = Duration::new(0, 10000);
-            if let Ok((msg, _)) = self.recv_outgoing.recv_timeout(dur) {
+            if let Ok((msg, _)) = self.recv_outgoing.recv() {
                 self.snd(msg);
             };
         };
@@ -168,9 +166,5 @@ impl NetComm {
 
     pub fn snd_msg(&self, msg: ClientMsg) {
         self.send_outgoing.send((msg, 0)).unwrap();
-    }
-
-    pub fn rcv(&self) {
-
     }
 }
