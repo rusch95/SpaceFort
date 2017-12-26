@@ -23,3 +23,8 @@ pub fn win_to_tile_selector(selector: Selector, ch: &CameraHandle) -> TilesSelec
     let (win_pos1, win_pos2) = selector;
     (win_pos_to_tile(win_pos1, ch), win_pos_to_tile(win_pos2, ch))
 }
+
+pub fn sel_dist(selector: Selector) -> f64 {
+    let ((x1, y1), (x2, y2)) = selector;
+    ((x1 - x2).powf(2.0) + (y1 - y2).powf(2.0))
+}

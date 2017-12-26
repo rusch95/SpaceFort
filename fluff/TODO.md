@@ -11,8 +11,8 @@
 
 * ~~Network~~
 * ~~Highlight selected units~~
-* Click to select single unit
-* Make attack correct and add chance
+* ~~Click to select single unit~~
+* Make attack correct
 * Tileset
 * Unit spawning in section when player joins
 * Buildings that spawn units
@@ -21,6 +21,7 @@
 0.3 Release - Cool / Technical Debt Demo
 =============================
 
+* Fix click
 * Extend test suite
 * Map Editor
 * Ramps and Floors as property

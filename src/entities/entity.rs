@@ -76,7 +76,6 @@ impl Entity {
         // target moves. Check the the attacker is adjacent to the target
 
         // TODO Swap this thing out for creature properties
-        use self::AttackType::*;
 
         let damage = match attack_type {
             _ => 40,

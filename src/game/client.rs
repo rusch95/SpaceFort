@@ -16,12 +16,15 @@ use net::base::{ServerMsg, PlayerJoin};
 use net::client::NetComm;
 
 
+const CLICK_THRESH: f64 = 40.0;
+
 pub struct Client {
     pub player_id: Option<PlayerID>,
 
     pub ch: CameraHandle,
     mouse_pos: WinPos,
     pub selector: Option<Selector>,
+    // Keep track of click down to detect if entity has been clicked
     pub selected_entities: Vec<EntID>,
     // The starting coordinate for the selection rectangle
     selector_start: Option<WinPos>, 
@@ -58,10 +61,11 @@ impl Client {
         Client {
             // Start with none and initialize when connected
             player_id: None,
+
             ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
-            selected_entities: Vec::new(),
             mouse_pos: (0.0, 0.0),
             selector: None,
+            selected_entities: Vec::new(),
             selector_start: None,
             sel_state: SelState::Ents,
             done: false,
@@ -140,25 +144,42 @@ impl Client {
 
     pub fn release_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
-            if let Some(selector) = self.selector {   
-                let tiles_selector = win_to_tile_selector(selector, &self.ch);
 
-                // Convert to RPCs
-                match self.sel_state {
-                    SelState::Ents => {
-                        self.selected_entities = 
-                            select_entities(
-                                |ent| ent.team_id == self.player_id,
-                                &self.entities, 
-                                tiles_selector);
-                    },
-                    SelState::Digging  => {
-                        self.comm.mark_dig(tiles_selector);
-                        self.sel_state = SelState::Ents;
-                    },
-                    SelState::Attack => {
-                        self.add_attack_goal(tiles_selector);
-                        self.sel_state = SelState::Ents;
+            if let Some(selector) = self.selector {   
+                // Check for click on same spot
+                if sel_dist(selector) < CLICK_THRESH {
+                    info!("Sel dist: {}", sel_dist(selector));
+                    let (pos, _) = selector;
+                    let tile_pos = win_pos_to_tile(pos, &self.ch);
+
+                    if let Some(ent) = self.entities.iter()
+                                                    .rev()
+                                                    .find(|ent| ent.pos == tile_pos) {
+                        self.selected_entities = vec![ent.id];
+                    } else {
+                        info!("None selected");
+                        self.selected_entities = Vec::new();
+                    }
+
+                } else {
+                    let tiles_selector = win_to_tile_selector(selector, &self.ch);
+
+                    match self.sel_state {
+                        SelState::Ents => {
+                            self.selected_entities = 
+                                select_entities(
+                                    |ent| ent.team_id == self.player_id,
+                                    &self.entities, 
+                                    tiles_selector);
+                        },
+                        SelState::Digging  => {
+                            self.comm.mark_dig(tiles_selector);
+                            self.sel_state = SelState::Ents;
+                        },
+                        SelState::Attack => {
+                            self.add_attack_goal(tiles_selector);
+                            self.sel_state = SelState::Ents;
+                        }
                     }
                 }
 
