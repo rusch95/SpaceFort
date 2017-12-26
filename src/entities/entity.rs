@@ -90,6 +90,7 @@ impl Entity {
     }
 
     fn is_adjacent(&self, ent: &Entity) -> bool {
+        info!("Self: {:?}, target: {:?}", self.pos, ent.pos);
         let (sx, sy, sz)  = self.pos;
         let (ex, ey, ez) = ent.pos;
 
