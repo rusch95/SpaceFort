@@ -104,7 +104,7 @@ pub fn resolve_dead(entities: &mut Entities) {
     // and any other magic
 
     for ent in entities {
-        if ent.health < 0 || ent.alive == false {
+        if ent.health < 0 || !ent.alive {
             ent.alive = false;
             ent.team_id = None;
             ent.goal = None;
@@ -177,7 +177,7 @@ pub fn attack(attacker: &mut Entity, target_id: EntID, ents: &mut [Entity]) {
     // TODO Swap this thing out for creature properties
     let damage = 40;
     if let Some(target) = ents.iter_mut()
-                              .find(|ref ent| ent.id == target_id) {
+                              .find(|ent| ent.id == target_id) {
         target.health -= damage;
     }
 }

@@ -11,9 +11,11 @@ use map::material::{init_materials, MaterialID, Material, Materials};
 
 pub type Tiles = Vec<Tile>;
 
-const CHUNK_TILES_X: i32 = 8;
-const CHUNK_TILES_Y: i32 = 8;
-const CHUNK_TILES_Z: i32 = 1;
+pub type PosUnit = i32;
+
+const CHUNK_TILES_X: PosUnit = 8;
+const CHUNK_TILES_Y: PosUnit = 8;
+const CHUNK_TILES_Z: PosUnit = 1;
 
 //TODO Clean up unwraps
 
@@ -29,9 +31,9 @@ pub struct Map {
     //Holds the terrain info as a vector of tiles
     tiles: Tiles, 
     pub materials: Materials,
-    xlen: i32,
-    ylen: i32,
-    zlen: i32,
+    xlen: PosUnit,
+    ylen: PosUnit,
+    zlen: PosUnit,
 }
 
 #[derive(Debug, Clone)]
@@ -39,17 +41,17 @@ pub struct MapSnapshot {
     //Represents a slice of the map 
     //to be be delivered to the rendering engine
     pub tiles: Tiles,
-    pub xlen: i32,
-    pub ylen: i32,
+    pub xlen: PosUnit,
+    pub ylen: PosUnit,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct MapChunk {
     pub tiles: Tiles,
     pub pos: Pos,
-    pub xlen: i32,
-    pub ylen: i32,
-    pub zlen: i32,
+    pub xlen: PosUnit,
+    pub ylen: PosUnit,
+    pub zlen: PosUnit,
 }
 
 pub fn init_map(root: &Path) -> Map {
@@ -91,7 +93,7 @@ impl Map {
         }
     }
 
-    pub fn size(&self) -> (i32, i32, i32) {
+    pub fn size(&self) -> Pos {
         (self.xlen, self.ylen, self.zlen)
     }
 
@@ -104,7 +106,7 @@ impl Map {
         self.zlen = z;
     }
 
-    pub fn get_chunk(&mut self, pos: Pos, size: Pos) -> MapChunk {
+    pub fn get_chunk(&self, pos: Pos, size: Pos) -> MapChunk {
         let (x0, y0, z0) = pos;
         let (xlen, ylen, zlen) = size;
 
@@ -113,7 +115,7 @@ impl Map {
         for x in x0..(x0 + xlen) {
             for y in y0..(y0 + ylen) {
                 for z in z0..(z0 + zlen) {
-                    let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
+                    let index = self.coords_to_index((x, y, z));
                     tiles.push(self.tiles[index]);
                 }
             }
@@ -129,7 +131,7 @@ impl Map {
     }
 
     // TODO Add duplication factor
-    pub fn to_chunks(&mut self) -> Vec<MapChunk> {
+    pub fn to_chunks(&self) -> Vec<MapChunk> {
         let mut chunks = Vec::<MapChunk>::new();
         
         let x_chunks = Map::get_num_chunks(self.xlen, CHUNK_TILES_X);
@@ -157,7 +159,7 @@ impl Map {
         chunks
     }
 
-    fn get_num_chunks(map_len: i32, chunk_len: i32) -> i32 {
+    fn get_num_chunks(map_len: PosUnit, chunk_len: PosUnit) -> PosUnit {
         if map_len % chunk_len == 0 {
             map_len / chunk_len
         } else {
@@ -165,7 +167,7 @@ impl Map {
         }
     }
 
-    pub fn apply_chunk(&mut self, chunk: MapChunk) {
+    pub fn apply_chunk(&mut self, chunk: &MapChunk) {
         let (x0, y0, z0) = chunk.pos;
 
         let mut chunk_i = 0;
@@ -183,28 +185,34 @@ impl Map {
         }
     }
 
+    /// Tile accesor method
     pub fn get_tile(&self, pos: Pos) -> Option<Tile> {
-        //Tile accesor method
-        let (x, y, z) = pos;
-        if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
-            None
-        } else {
-            let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
+        if self.in_bounds(pos) { 
+            let index = self.coords_to_index(pos);
             Some(self.tiles[index])
+        } else {
+            None
         }
     }
 
+    /// Perform some mutable operation to a tile
     fn apply_tile_func<F>(&mut self, pos: Pos, func: F)
         where F: Fn(&mut Tile) {
-        // Perform some mutable operation to a tile
 
-        let (x, y, z) = pos;
-        if 0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen {
-            ()
-        } else {
-            let index = (x + y * self.xlen + z * self.xlen * self.ylen) as usize;
+        if self.in_bounds(pos) {
+            let index = self.coords_to_index(pos);
             func(&mut self.tiles[index]);
         }
+    }
+
+    fn in_bounds(&self, pos: Pos) -> bool {
+        let (x, y, z) = pos;
+        !(0 > x || 0 > y || 0 > z || x >= self.xlen || y >= self.ylen || z >= self.zlen)
+    }
+
+    fn coords_to_index(&self, pos: Pos) -> usize {
+        let (x, y, z) = pos;
+        (x + y * self.xlen + z * self.xlen * self.ylen) as usize
     }
 
     pub fn update_tile(&mut self, new_tile: Tile, pos: Pos) {
@@ -297,12 +305,17 @@ impl MapSnapshot {
         //[debug] func
         for y in 0..self.ylen {
             for x in 0..self.xlen {
-                let index = (x + y * self.xlen) as usize;
+                let index = self.coords_to_index((x, y, 0));
                 print!("{0}", self.tiles[index].material % 10);
             }
             println!();
         }
         println!();
+    }
+
+    fn coords_to_index(&self, pos: Pos) -> usize {
+        let (x, y, _) = pos;
+        (x + y * self.xlen) as usize
     }
 }
 
@@ -337,7 +350,7 @@ pub fn blank_map(root: &Path) -> Map {
     }
 }
 
-fn load_map(path: &str, materials: Materials) -> Result<Map, Error> {
+pub fn load_map(path: &str, materials: Materials) -> Result<Map, Error> {
     //Load map from file. Currently unversioned so take heed.
     //Map validation is not performed.
     let mut f = try!(File::open(&path));

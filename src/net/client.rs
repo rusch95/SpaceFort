@@ -12,18 +12,18 @@ use net::base::*;
 
 
 pub struct ClientNetIn {
-    pub stream: TcpStream,
-    pub send_incoming: ServerMsgSend,
+    stream: TcpStream,
+    send_incoming: ServerMsgSend,
 }
 
 pub struct ClientNetOut {
-    pub stream: TcpStream,
-    pub recv_outgoing: ClientMsgRecv,
+    stream: TcpStream,
+    recv_outgoing: ClientMsgRecv,
 }
 
 pub struct NetComm {
-    pub send_outgoing: ClientMsgSend,
-    pub recv_incoming: ServerMsgRecv,
+    send_outgoing: ClientMsgSend,
+    recv_incoming: ServerMsgRecv,
 }
 
 pub fn init_network(server_ip: Ipv4Addr) -> NetComm {
@@ -64,12 +64,12 @@ impl ClientNetOut {
     pub fn outgoing(&mut self) {
         loop {
             if let Ok((msg, _)) = self.recv_outgoing.recv() {
-                self.snd(msg);
+                self.snd(&msg);
             };
         };
     }
 
-    fn snd(&mut self, msg: ClientMsg) {
+    fn snd(&mut self, msg: &ClientMsg) {
 
         let mut buf = [0u8; MSG_BUF_SIZE];
         let encoded: Vec<u8> = serialize(&msg, Infinite).unwrap();
@@ -93,16 +93,13 @@ impl ClientNetIn {
 
     pub fn incoming(&mut self) {
         loop {
-            match self.rcv() {
-                Ok(msg) => { 
-                    self.send_incoming.send((msg, 0)).unwrap();
-                },
-                Err(_) => {},            
+            if let Ok(msg) = self.rcv() {
+                self.send_incoming.send((msg, 0)).unwrap();
             }
         }
     }
 
-    pub fn rcv(&mut self) -> Result<ServerMsg, io::Error> {
+    fn rcv(&mut self) -> Result<ServerMsg, io::Error> {
         let mut n_buf = [0u8; 4];
         let mut buf = [0u8; MSG_BUF_SIZE];
 
@@ -164,7 +161,7 @@ impl NetComm {
         self.snd_msg(ClientMsg::Leave());
     }
 
-    pub fn snd_msg(&self, msg: ClientMsg) {
+    fn snd_msg(&self, msg: ClientMsg) {
         self.send_outgoing.send((msg, 0)).unwrap();
     }
 }

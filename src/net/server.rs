@@ -14,16 +14,16 @@ use net::base::*;
 
 
 pub struct ServerNetOut {
-    pub player_conns: HashMap<PlayerID, TcpStream>,
-    pub recv_outgoing: ServerMsgRecv,
-    pub recv_stream_from_game: RecvStream,
+    player_conns: HashMap<PlayerID, TcpStream>,
+    recv_outgoing: ServerMsgRecv,
+    recv_stream_from_game: RecvStream,
 }
 
 pub struct NetComm {
-    pub send_outgoing: ServerMsgSend,
-    pub recv_incoming: ClientMsgRecv,
-    pub recv_stream_to_game: RecvStream,
-    pub send_stream_from_game: SendStream,
+    send_outgoing: ServerMsgSend,
+    recv_incoming: ClientMsgRecv,
+    recv_stream_to_game: RecvStream,
+    send_stream_from_game: SendStream,
 }
 
 pub fn init_network() -> NetComm {
@@ -41,30 +41,25 @@ pub fn init_network() -> NetComm {
 
     // Listener thread
     thread::spawn(move|| {
-        let mut next_player_id = 0;
+        let mut next_player_id = 1;
 
-        for stream in listener.incoming() {
-            match stream {
-                Ok(stream) => {
-                    info!("New client at {:?}", stream);
-                    stream.set_nodelay(true).unwrap();
+        for _stream in listener.incoming() {
+            if let Ok(stream) = _stream {
+                info!("New client at {:?}", stream);
+                stream.set_nodelay(true).unwrap();
 
-                    let player_id = next_player_id;
-                    next_player_id += 1;
+                let player_id = next_player_id;
+                next_player_id += 1;
 
-                    // Send copy of stream to outgoing
-                    let stream_copy = stream.try_clone().unwrap();
-                    send_stream_to_game.send((stream_copy, player_id)).unwrap();
+                // Send copy of stream to outgoing
+                let stream_copy = stream.try_clone().unwrap();
+                send_stream_to_game.send((stream_copy, player_id)).unwrap();
 
-                    let send_in_clone = send_incoming.clone();
-                    thread::spawn(move|| {
-                        // Tell the game that  a new player has joined
-                        handle_client(stream, send_in_clone, player_id);
-                    });
-
-                }
-
-                Err(_) =>  {},
+                let send_in_clone = send_incoming.clone();
+                thread::spawn(move|| {
+                    // Tell the game that  a new player has joined
+                    handle_client(stream, send_in_clone, player_id);
+                });
             }
         }
     });
@@ -91,7 +86,7 @@ pub fn handle_client(mut stream: TcpStream, send_incoming: SyncClientMsgSend,
     }
 }
 
-pub fn rcv(stream: &mut TcpStream) -> Result<ClientMsg, io::Error> {
+fn rcv(stream: &mut TcpStream) -> Result<ClientMsg, io::Error> {
     let mut n_buf = [0u8; 4];
     let mut buf = [0u8; MSG_BUF_SIZE];
 
@@ -118,15 +113,15 @@ impl ServerNetOut {
     pub fn outgoing(&mut self) {
         loop {
             if let Ok((msg, player_id)) = self.recv_outgoing.recv() {
-                self.snd(msg, player_id);
+                self.snd(&msg, player_id);
             };
         };
     }
 
-    fn snd(&mut self, msg: ServerMsg, player_id: PlayerID) {
+    fn snd(&mut self, msg: &ServerMsg, player_id: PlayerID) {
         // Iterate over new streams until the stream for this joining can be added
         // TODO Think about whether this checking is neccessary
-        if let ServerMsg::ReplyJoin(reply) = msg {
+        if let ServerMsg::ReplyJoin(reply) = *msg {
             while !self.player_conns.contains_key(&reply.player_id) {
                 match self.recv_stream_from_game.recv() {
                     Ok((stream, player_id)) => { self.player_conns.insert(player_id, stream); },
@@ -138,7 +133,7 @@ impl ServerNetOut {
         if let Some(mut conn) = self.player_conns.get(&player_id) {
 
             let mut buf = [0u8; MSG_BUF_SIZE];
-            let encoded: Vec<u8> = serialize(&msg, Infinite).unwrap();
+            let encoded: Vec<u8> = serialize(msg, Infinite).unwrap();
             let enc_size_u8s = usize_to_u8_array(encoded.len());
             let buf_len = encoded.len() + 4;
 
@@ -208,7 +203,7 @@ impl NetComm {
         self.snd_msg(player_id, ServerMsg::Boot());
     }
 
-    pub fn snd_msg(&self, player_id: PlayerID, msg: ServerMsg) {
+    fn snd_msg(&self, player_id: PlayerID, msg: ServerMsg) {
         self.send_outgoing.send((msg, player_id)).unwrap();
     }
 }

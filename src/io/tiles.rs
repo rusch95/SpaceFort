@@ -11,7 +11,7 @@ use game::base::*;
 use game::client::Client;
 use map::tiles::{Map, MapSnapshot};
 use entities::creatures::{CreatureMap, get_color};
-use entities::entity::Entities;
+use entities::entity::Entity;
 
 
 fn draw_tiles(c: Context, gl: &mut GlGraphics, 
@@ -37,7 +37,7 @@ fn draw_tiles(c: Context, gl: &mut GlGraphics,
 }
 
 fn draw_entities(c: Context, gl: &mut GlGraphics, 
-                 ch: &CameraHandle, entities: &Entities,
+                 ch: &CameraHandle, entities: &[Entity],
                  creature_types: &CreatureMap) {
     // Scale entities slightly smaller than a square for now
     let inner_square = rectangle::square(0.0, 0.0, X_PIXELS * 0.85);

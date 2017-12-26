@@ -187,7 +187,7 @@ impl Client {
         match msg {
             ServerMsg::ReplyJoin(player_join) => self.join(player_join),
             ServerMsg::SendEnts(ent_snaps) => self.update_ents(ent_snaps),
-            ServerMsg::SendMapChunk(chunk) => self.map.apply_chunk(chunk),
+            ServerMsg::SendMapChunk(chunk) => self.map.apply_chunk(&chunk),
             ServerMsg::UpdateTile(tile, pos) => self.map.update_tile(tile, pos),
             ServerMsg::Boot() => {
                 warn!("Booted");
@@ -208,7 +208,7 @@ impl Client {
 
     fn update_ents(&mut self, ent_snaps: EntSnaps) {
         for ent_snap in ent_snaps {
-            for ent in self.entities.iter_mut() {
+            for ent in &mut self.entities {
                 if ent_snap.id == ent.id {
                     ent.pos = ent_snap.pos;
                     ent.health = ent_snap.health;

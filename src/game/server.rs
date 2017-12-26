@@ -6,7 +6,7 @@ use std::thread;
 use map::tiles::Map;
 use game::base::*;
 use entities::creatures::CreatureMap;
-use entities::entity::{Entity, Entities, EntSnaps, EntID, EntIDs};
+use entities::entity::{Entity, Entities, EntSnaps, EntID};
 use entities::entity::{do_actions, resolve_dead, schedule_actions};
 use entities::actions::{Action, Tasks, add_dig_tasks};
 use entities::pathfind::{path_to, path_next_to};
@@ -94,12 +94,11 @@ impl Server {
     }
 
     fn ent_updates(&mut self, player_id: PlayerID) {
-        let mut ent_snaps = EntSnaps::new();
-        for ent in self.g_state.entities.iter_mut() {
-            ent_snaps.push(ent.snap());
-        }
+        let ent_snaps: EntSnaps = self.g_state.entities.iter_mut()
+                                              .map(|ent| ent.snap())
+                                              .collect();
         
-        self.comm.send_ents(player_id, ent_snaps.clone());
+        self.comm.send_ents(player_id, ent_snaps);
     }
 
     fn tile_update(&mut self, pos: Pos) {
@@ -138,7 +137,7 @@ impl Server {
     pub fn player_update(&mut self) {
         for player in self.players.values_mut() {
             schedule_actions(&mut self.g_state.entities, &mut player.tasks,
-                             &mut self.g_state.map, &self.g_state.creature_types,
+                             &self.g_state.map, &self.g_state.creature_types,
                              Some(player.player_id))
         }
     }
@@ -155,7 +154,7 @@ impl Server {
 
     pub fn attack(&mut self, player_id: PlayerID, attacker: EntID, defender: EntID) {
         if let Some(player) = self.players.get_mut(&player_id) {
-            player.ents_attack(&vec![attacker], defender, &mut self.g_state);
+            player.ents_attack(&[attacker], defender, &mut self.g_state);
         }
     }
 
@@ -195,7 +194,7 @@ impl GameState {
         changes
     }
 
-    fn move_ents(&mut self,  ent_ids: &EntIDs, dest_pos: Pos) {
+    fn move_ents(&mut self,  ent_ids: &[EntID], dest_pos: Pos) {
         for ent in &mut self.entities {
             for ent_id in ent_ids {
                 if ent.id == *ent_id {
@@ -221,7 +220,7 @@ impl ServerPlayer {
         }
     }
 
-    pub fn ents_attack(&mut self, attackers: &EntIDs, target_id: EntID, 
+    pub fn ents_attack(&mut self, attackers: &[EntID], target_id: EntID, 
                        g_state: &mut GameState) {
         let team_id = Some(self.player_id);
         let (mut team_ents, mut else_ents): (Vec<&mut Entity>, Vec<&mut Entity>) =
@@ -229,11 +228,11 @@ impl ServerPlayer {
                              .partition( |ent| ent.team_id == team_id);
 
         if let Some(target) = else_ents.iter_mut()
-                                           .find(|ref ent| (*ent).id == target_id) {
+                                           .find(|ent| (*ent).id == target_id) {
             for ent_id in attackers {
                 if let Some(mut ent) = team_ents.iter_mut()
-                                                .find(|ref ent| (*ent).id == *ent_id) {
-                    ent.actions = path_next_to(&g_state.map, &mut ent,
+                                                .find(|ent| (*ent).id == *ent_id) {
+                    ent.actions = path_next_to(&g_state.map, ent,
                                                &g_state.creature_types,
                                                target.pos);
                     ent.actions.push_back(Action::attack(target_id));

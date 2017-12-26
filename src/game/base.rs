@@ -1,6 +1,6 @@
 use entities::entity::EntID;
 
-pub const FRAME_RATE_NS: u32 = 16666667;
+pub const FRAME_RATE_NS: u32 = 16_666_667;
 
 pub type PlayerID = u16;
 pub type TeamID = Option<PlayerID>;

@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use std::cmp::{min, max};
 
 use map::tiles::Map;
-use entities::entity::{Entities, Entity, EntID, EntIDs};
+use entities::entity::{Entity, EntID, EntIDs};
 use game::base::*;
 use io::base::TilesSelector;
 
@@ -51,7 +51,7 @@ impl Task {
 }
 
 // TODO Refactor into having a filter Predicate supplied
-pub fn select_entities<F>(pred: F, ents: &Entities, 
+pub fn select_entities<F>(pred: F, ents: &[Entity], 
                        selector: TilesSelector) -> EntIDs
     where F: Fn(&Entity) -> bool {
     let (s1, s2) = rotate_selector(selector);
