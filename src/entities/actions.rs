@@ -4,6 +4,7 @@ use std::cmp::{min, max};
 use map::tiles::Map;
 use entities::entity::{Entity, EntID, EntIDs};
 use entities::creatures::{CreatureID, CreatureMap, attack_speed, dig_speed};
+use entities::utils::*;
 use game::base::*;
 use io::base::TilesSelector;
 
@@ -67,8 +68,15 @@ impl Task {
     /// # Arguments
     ///
     /// * `pos` - The position of the tile to be dug
-    fn dig(pos: Pos) -> Task {
+    pub fn dig(pos: Pos) -> Task {
         Task { atype: ActionType::Dig(pos), owner: None }
+    }
+
+    pub fn priority(&self, ent: &Entity) -> i64 {
+        match self.atype {
+            ActionType::Dig(pos) => dist(&ent.pos, &pos) as i64,
+            _ => 0,
+        }
     }
 }
 

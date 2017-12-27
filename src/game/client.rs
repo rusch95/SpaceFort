@@ -157,7 +157,6 @@ impl Client {
                                                     .find(|ent| ent.pos == tile_pos) {
                         self.selected_entities = vec![ent.id];
                     } else {
-                        info!("None selected");
                         self.selected_entities = Vec::new();
                     }
 

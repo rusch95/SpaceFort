@@ -75,8 +75,7 @@ impl Entity {
         // file instead of a hardcoded 40. Make attackers repath if the
         // target moves. Check the the attacker is adjacent to the target
 
-        // TODO Swap this thing out for creature properties
-
+        // TODO Figure out how to work this off of creature properties
         let damage = match attack_type {
             _ => 40,
         };
@@ -90,17 +89,20 @@ impl Entity {
     }
 
     fn is_adjacent(&self, ent: &Entity) -> bool {
-        info!("Self: {:?}, target: {:?}", self.pos, ent.pos);
         let (sx, sy, sz)  = self.pos;
         let (ex, ey, ez) = ent.pos;
 
         (sx - ex).abs() <= 1 && (sy - ey).abs() <= 1 && (sz - ez).abs() <= 1 
     }
 
+    /// Enumerate the actions the a task requires, so that they can be 
+    /// added to the target entities actions queue
+    ///
+    /// # Returns
+    /// * Actions
+    /// * Can do action
     pub fn schedule_action(&self, map: &Map, creature_types: &CreatureMap, 
-                       atype: ActionType) -> Actions {
-        // Enumerate the actions the a task requires, so that they can be 
-        // added to the target entities actions queue
+                       atype: ActionType) -> Option<Actions> {
         let mut actions = Actions::new();
         match atype {
             ActionType::Dig(pos) => {
@@ -108,9 +110,10 @@ impl Entity {
                 if !path.is_empty() {
                     actions.extend(path);
                     actions.push_back(Action::dig(pos, &self.creature_id, creature_types));
+                    Some(actions)
+                } else {
+                    None
                 }
-
-                actions
             }
             _ => panic!("Not covered")
         }
@@ -215,19 +218,31 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
     changes
 }
 
+// TODO Add task prioritization i.e. dig a square that is close, instead of one that is far
 pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, map: &Map, 
                         creature_types: &CreatureMap, team_id: TeamID) {
-    for ent in entities {
-        if ent.actions.is_empty() && ent.team_id == team_id {
-            for task in tasks.iter_mut() {
-                // If a task is not owned by anyone, assign it to some entitiy
-                if task.owner == None {
-                    task.owner = Some(ent.id);
-                    ent.actions = ent.schedule_action(map, creature_types, 
-                                                      task.atype);
-                    break;
-                }
+    for ent in entities.iter_mut().filter(|ent| ent.actions.is_empty() &&
+                                            ent.team_id == team_id) {
+        tasks.sort_unstable_by_key(|task| task.priority(&ent));
+        for task in tasks.iter_mut()
+                         .filter(|task| task.owner.is_none()) {
+            // If a task is not owned by anyone, assign it to some entitiy
+            if let Some(actions) = ent.schedule_action(map, creature_types, 
+                                                       task.atype) {
+                task.owner = Some(ent.id);
+                ent.actions = actions;
+                break;
+            } else {
+                continue;
             }
+        }
+    }
+}
+
+pub fn validate_goals(entities: &mut Entities) {
+    for ent in entities.iter_mut().filter(|ent| ent.goal.is_some()) {
+        match ent.goal {
+            _ => {},
         }
     }
 }

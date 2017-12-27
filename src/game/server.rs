@@ -7,7 +7,7 @@ use map::tiles::Map;
 use game::base::*;
 use entities::creatures::CreatureMap;
 use entities::entity::{Entity, Entities, EntSnaps, EntID};
-use entities::entity::{do_actions, resolve_dead, schedule_actions};
+use entities::entity::{do_actions, resolve_dead, schedule_actions, validate_goals};
 use entities::actions::{Action, Tasks, add_dig_tasks};
 use entities::pathfind::{path_to, path_next_to};
 use net::base::{ClientMsg, PlayerJoin};
@@ -191,6 +191,7 @@ impl GameState {
         // Entity update and pathfinding
         let changes = do_actions(&mut self.entities, &mut self.map);
         resolve_dead(&mut self.entities);
+        validate_goals(&mut self.entities);
 
         changes
     }
