@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::mem;
 
-use entities::actions::{Action, Actions, ActionType, AttackType, Tasks};
+use entities::actions::{Action, Actions, ActionType, AttackType, Goal, Tasks};
 use entities::pathfind::path_next_to;
 use entities::creatures::{CreatureID, CreatureMap, init_creatures};
 use game::base::*;
@@ -27,7 +27,7 @@ pub struct Entity {
     // The stack of actions that the entity has to do
     pub actions: Actions,
     // The current thing the entity wants to do e.g. attack foo or build foo
-    pub goal: Option<ActionType>,
+    pub goal: Option<Goal>,
     // Hit points
     pub health: Health,
     // Dead or alive
@@ -240,9 +240,17 @@ pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, map: &Map,
 }
 
 pub fn validate_goals(entities: &mut Entities) {
-    for ent in entities.iter_mut().filter(|ent| ent.goal.is_some()) {
-        match ent.goal {
-            _ => {},
+    let mut new_goals: Vec<Goal> = Vec::new();
+    for ent in entities.iter().filter(|ent| ent.goal.is_some()) {
+        let _new_goal = match ent.goal {
+            Some(Goal::Attack(attack_type, ent_id, pos)) => {
+                None
+            },
+            _ => None,
+        };
+
+        if let Some(new_goal) = _new_goal {
+            new_goals.push(new_goal);
         }
     }
 }

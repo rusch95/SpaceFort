@@ -237,8 +237,10 @@ impl ServerPlayer {
                     ent.actions = path_next_to(&g_state.map, ent,
                                                &g_state.creature_types,
                                                target.pos);
-                    ent.actions.push_back(Action::attack(target_id, &ent.creature_id,
-                                                         &g_state.creature_types));
+                    let (action, goal) = Action::attack(&target, &ent.creature_id,
+                                                  &g_state.creature_types);
+                    ent.actions.push_back(action);
+                    ent.goal = Some(goal);
                 }
             }
         }

@@ -123,10 +123,7 @@ impl NetComm {
     }
 
     pub fn get_incoming_msgs(&mut self) -> Option<ServerMsg> {
-        match self.recv_incoming.try_recv() {
-            Ok((msg, _)) => Some(msg),
-            Err(_) => None,
-        }
+        self.recv_incoming.try_recv().ok().map(|(msg, _)| msg)
     }
 
     pub fn heartbeat(&self) {

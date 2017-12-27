@@ -28,6 +28,11 @@ pub enum ActionType {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum Goal {
+    Attack(AttackType, EntID, Pos),
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum AttackType {
     Bite,
     Punch,
@@ -55,10 +60,15 @@ impl Action {
     }
 
     // TODO Unhardcode attack duration
-    pub fn attack(ent_id: EntID, creature_id: &CreatureID, 
-                  creature_types: &CreatureMap) -> Action {
-        Action::new(ActionType::Attack(AttackType::Bite, ent_id),
-                    attack_speed(creature_id, creature_types))
+    pub fn attack(ent: &Entity, creature_id: &CreatureID, 
+                  creature_types: &CreatureMap) -> (Action, Goal) {
+        let attack_type = AttackType::Bite;
+        let action = Action::new(
+            ActionType::Attack(attack_type, ent.id),
+            attack_speed(creature_id, creature_types));
+        let goal = Goal::Attack(attack_type, ent.id, ent.pos);
+        
+        (action, goal)
     }
 }
 

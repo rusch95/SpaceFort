@@ -158,10 +158,7 @@ impl NetComm {
     }
 
     pub fn check_incoming_streams(&mut self) -> Option<(TcpStream, PlayerID)> {
-        match self.recv_stream_to_game.try_recv() {
-            Ok(msg) => Some(msg),
-            Err(_) => None,
-        }
+        self.recv_stream_to_game.try_recv().ok()
     }
 
     pub fn setup_out_stream(&mut self, msg: (TcpStream, PlayerID)) {
@@ -169,10 +166,7 @@ impl NetComm {
     }
 
     pub fn check_incoming_msgs(&mut self) -> Option<(ClientMsg, PlayerID)> {
-        match self.recv_incoming.try_recv() {
-            Ok(msg) => Some(msg),
-            Err(_) => None,
-        }
+        self.recv_incoming.try_recv().ok()
     }
 
     pub fn reply_join(&self, player_id: PlayerID, player_join: PlayerJoin) {
