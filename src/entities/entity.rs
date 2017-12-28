@@ -185,7 +185,7 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
         // happy while we do things with the rest of the ent
         mem::swap(&mut ent.actions, &mut temp_vec);
         // Check if task is done
-        let task_done = match temp_vec.front_mut() {
+        let task_done = match temp_vec.front() {
             Some(act) => {
                 if act.duration > ent.timer {
                     ent.timer += 1; 
