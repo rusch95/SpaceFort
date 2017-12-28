@@ -32,6 +32,8 @@ pub struct Entity {
     pub health: Health,
     // Dead or alive
     pub alive: bool,
+    // Timer for waiting out the duration of an action
+    pub timer: Ticks,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq)]
@@ -56,6 +58,7 @@ impl Entity {
             goal: None,
             health: 100,
             alive: true,
+            timer: 0,
         }
     }
 
@@ -118,6 +121,7 @@ impl Entity {
             _ => panic!("Not covered")
         }
     }
+
 }
 
 pub fn init_entities(root: &Path) -> (Entities, CreatureMap) {
@@ -183,8 +187,12 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
         // Check if task is done
         let task_done = match temp_vec.front_mut() {
             Some(act) => {
-                if act.duration > 0 {act.duration -= 1; false}
-                else {
+                if act.duration > ent.timer {
+                    ent.timer += 1; 
+                    false
+                } else {
+                    ent.timer = 0;
+
                     match act.atype {
                         ActionType::Move(pos) => {
                             // TODO Add validation testing
@@ -235,22 +243,6 @@ pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, map: &Map,
             } else {
                 continue;
             }
-        }
-    }
-}
-
-pub fn validate_goals(entities: &mut Entities) {
-    let mut new_goals: Vec<Goal> = Vec::new();
-    for ent in entities.iter().filter(|ent| ent.goal.is_some()) {
-        let _new_goal = match ent.goal {
-            Some(Goal::Attack(attack_type, ent_id, pos)) => {
-                None
-            },
-            _ => None,
-        };
-
-        if let Some(new_goal) = _new_goal {
-            new_goals.push(new_goal);
         }
     }
 }

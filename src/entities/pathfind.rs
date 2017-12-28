@@ -43,6 +43,9 @@ pub fn path<F>(map: &Map, ent: &Entity, creature_types: &CreatureMap,
             );
         }
     }
+    
+    // First movement moves to current square, so get rid of it
+    actions.pop_front();
 
     actions
 }

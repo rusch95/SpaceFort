@@ -1,7 +1,7 @@
 use entities::entity::EntID;
 use map::tiles::PosUnit;
 
-pub const FRAME_RATE_NS: u32 = 4_666_667;
+pub const FRAME_RATE_NS: u32 = 16_666_667;
 
 pub type PlayerID = u16;
 pub type TeamID = Option<PlayerID>;

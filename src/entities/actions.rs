@@ -60,13 +60,13 @@ impl Action {
     }
 
     // TODO Unhardcode attack duration
-    pub fn attack(ent: &Entity, creature_id: &CreatureID, 
+    pub fn attack(id: EntID, pos: Pos, creature_id: CreatureID, 
                   creature_types: &CreatureMap) -> (Action, Goal) {
         let attack_type = AttackType::Bite;
         let action = Action::new(
-            ActionType::Attack(attack_type, ent.id),
-            attack_speed(creature_id, creature_types));
-        let goal = Goal::Attack(attack_type, ent.id, ent.pos);
+            ActionType::Attack(attack_type, id),
+            attack_speed(&creature_id, creature_types));
+        let goal = Goal::Attack(attack_type, id, pos);
         
         (action, goal)
     }

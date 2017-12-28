@@ -6,13 +6,15 @@ use std::thread;
 use map::tiles::Map;
 use game::base::*;
 use entities::creatures::CreatureMap;
+use entities::actions::{Action, Tasks, add_dig_tasks, Goal};
 use entities::entity::{Entity, Entities, EntSnaps, EntID};
-use entities::entity::{do_actions, resolve_dead, schedule_actions, validate_goals};
-use entities::actions::{Action, Tasks, add_dig_tasks};
+use entities::entity::{do_actions, resolve_dead, schedule_actions};
 use entities::pathfind::{path_to, path_next_to};
 use net::base::{ClientMsg, PlayerJoin};
 use net::server::NetComm;
 
+
+const VALIDATION_PERIOD: i32 = 10;
 
 pub struct Server {
     pub g_state: GameState,
@@ -160,7 +162,7 @@ impl Server {
     }
 
     pub fn dispatch(&mut self, msg: ClientMsg, player_id: PlayerID) {
-        info!("Msg: {:?}", msg);
+        debug!("Msg: {:?}", msg);
         match msg {
             ClientMsg::RequestMap(_) => self.send_map(0),
             ClientMsg::RequestEnts() => {},
@@ -188,10 +190,13 @@ impl GameState {
     pub fn update(&mut self) -> Vec<Change> {
         self.ticks += 1;
 
+        // Fix or null any invalid goals
+        if self.ticks % VALIDATION_PERIOD == 0 {
+            self.validate_goals();
+        }
         // Entity update and pathfinding
         let changes = do_actions(&mut self.entities, &mut self.map);
         resolve_dead(&mut self.entities);
-        validate_goals(&mut self.entities);
 
         changes
     }
@@ -202,6 +207,57 @@ impl GameState {
                 if ent.id == *ent_id {
                     ent.actions = path_to(&self.map, ent,
                                           &self.creature_types, dest_pos);
+                }
+            }
+        }
+    }
+
+    pub fn validate_goals(&mut self) {
+        let mut new_goals: Vec<(EntID, Option<Goal>)> = Vec::new();
+
+        for ent in self.entities.iter().filter(|ent| ent.goal.is_some()) {
+            // None = Not a new goal
+            // Some(None) = Current goal done or can't be done
+            // Some(goal) = Here's the new goal
+            let _new_goal = match ent.goal {
+                Some(Goal::Attack(attack_type, ent_id, pos)) => {
+                    if let Some(t_ent) = self.entities.iter()
+                                                      .find(|t_ent| t_ent.id == ent_id) {
+                        if t_ent.pos != pos || ent.actions.is_empty() {
+                            Some((ent.id, Some(Goal::Attack(attack_type, ent_id, t_ent.pos))))
+                        } else {
+                            None
+                        }
+                    } else {
+                        Some((ent.id, None))
+                    }
+                },
+                _ => None,
+            };
+
+            if let Some(new_goal) = _new_goal {
+                new_goals.push(new_goal);
+            }
+        }
+
+        for ent in self.entities.iter_mut() {
+            if let Some(&(_, goal_)) = new_goals.iter()
+                                               .find(|&&(ent_id, _)| ent_id == ent.id) {
+                if let Some(goal) = goal_ {
+                    match goal {
+                        Goal::Attack(attack_type, id, pos) => {
+                            ent.actions = path_next_to(&self.map, ent, 
+                                                       &self.creature_types, pos);
+                            let (action, goal) = Action::attack(id, pos, ent.creature_id,
+                                                                &self.creature_types);
+                            ent.actions.push_back(action);
+                            ent.goal = Some(goal);
+                        },
+                    }
+                } else {
+                    // Clear goal and actions, since goal cannot be done
+                    ent.goal = None;
+                    ent.actions.clear();
                 }
             }
         }
@@ -234,12 +290,8 @@ impl ServerPlayer {
             for ent_id in attackers {
                 if let Some(mut ent) = team_ents.iter_mut()
                                                 .find(|ent| (*ent).id == *ent_id) {
-                    ent.actions = path_next_to(&g_state.map, ent,
-                                               &g_state.creature_types,
-                                               target.pos);
-                    let (action, goal) = Action::attack(&target, &ent.creature_id,
-                                                  &g_state.creature_types);
-                    ent.actions.push_back(action);
+                    let (_, goal) = Action::attack(target.id, target.pos, ent.creature_id,
+                                                   &g_state.creature_types);
                     ent.goal = Some(goal);
                 }
             }

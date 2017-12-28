@@ -148,7 +148,6 @@ impl Client {
             if let Some(selector) = self.selector {   
                 // Check for click on same spot
                 if sel_dist(selector) < CLICK_THRESH {
-                    info!("Sel dist: {}", sel_dist(selector));
                     let (pos, _) = selector;
                     let tile_pos = win_pos_to_tile(pos, &self.ch);
 
