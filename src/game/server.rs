@@ -224,7 +224,8 @@ impl GameState {
                     Some(Goal::Attack(attack_type, ent_id, pos)) => {
                         if let Some(t_ent) = self.entities.iter()
                                                           .find(|t_ent| t_ent.id == ent_id) {
-                            if t_ent.pos != pos || ent.actions.is_empty() {
+                            if t_ent.pos != pos || ent.actions.is_empty() || 
+                                    !t_ent.alive {
                                 let goal = Goal::Attack(attack_type, ent_id, t_ent.pos);
                                 NewGoal(ent.id, goal)
                             } else {
