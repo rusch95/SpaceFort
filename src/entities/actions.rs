@@ -28,6 +28,10 @@ pub enum ActionType {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+// TODO Move Move and Dig over here, make them be validated,
+// allow goals to have dependecies, make Dig and Attack 
+// have a move next to dependency. Should allow for cleaner
+// validation and recomputation
 pub enum Goal {
     Attack(AttackType, EntID, Pos),
 }
