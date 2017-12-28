@@ -12,8 +12,7 @@
 * ~~Network~~
 * ~~Highlight selected units~~
 * ~~Click to select single unit~~
-* Make attack correct
-* Tileset
+* ~~Make attack correct~~
 * Unit spawning in section when player joins
 * Buildings that spawn units
 
@@ -30,6 +29,8 @@
     - Important for hacker types
 * Add a webclient
     - Makes it trivial to showcase the game to new people 
+* Investigate switching to SDL2
+* Tileset
 * Test Suite
 
 
