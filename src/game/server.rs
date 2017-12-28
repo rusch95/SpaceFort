@@ -213,52 +213,54 @@ impl GameState {
     }
 
     pub fn validate_goals(&mut self) {
-        let mut new_goals: Vec<(EntID, Option<Goal>)> = Vec::new();
+        use self::NewGoalPoss::*;
 
-        for ent in self.entities.iter().filter(|ent| ent.goal.is_some()) {
-            // None = Not a new goal
-            // Some(None) = Current goal done or can't be done
-            // Some(goal) = Here's the new goal
-            let _new_goal = match ent.goal {
-                Some(Goal::Attack(attack_type, ent_id, pos)) => {
-                    if let Some(t_ent) = self.entities.iter()
-                                                      .find(|t_ent| t_ent.id == ent_id) {
-                        if t_ent.pos != pos || ent.actions.is_empty() {
-                            Some((ent.id, Some(Goal::Attack(attack_type, ent_id, t_ent.pos))))
+        // Generate new goals
+        let new_goals: Vec<NewGoalPoss> = self.entities
+            .iter()
+            .filter(|ent| ent.goal.is_some())
+            .map(|ent| {
+                match ent.goal {
+                    Some(Goal::Attack(attack_type, ent_id, pos)) => {
+                        if let Some(t_ent) = self.entities.iter()
+                                                          .find(|t_ent| t_ent.id == ent_id) {
+                            if t_ent.pos != pos || ent.actions.is_empty() {
+                                let goal = Goal::Attack(attack_type, ent_id, t_ent.pos);
+                                NewGoal(ent.id, goal)
+                            } else {
+                                NoChange
+                            }
                         } else {
-                            None
+                            Delete(ent.id)
                         }
-                    } else {
-                        Some((ent.id, None))
-                    }
+                    },
+                    None => NoChange,
+                }})
+            .filter(|goal| goal != &NoChange)
+            .collect();
+
+        // Implement new goals
+        for goal in new_goals.iter() {
+            match *goal {
+                NewGoal(ent_id, Goal::Attack(attack_type, id, pos)) => {
+                    let ent = self.entities.iter_mut()
+                                           .find(|ent| ent.id == ent_id)
+                                           .unwrap();
+                    ent.actions = path_next_to(&self.map, ent, 
+                                               &self.creature_types, pos);
+                    let (action, goal) = Action::attack(id, pos, ent.creature_id,
+                                                        &self.creature_types);
+                    ent.actions.push_back(action);
+                    ent.goal = Some(goal);
                 },
-                _ => None,
-            };
-
-            if let Some(new_goal) = _new_goal {
-                new_goals.push(new_goal);
-            }
-        }
-
-        for ent in self.entities.iter_mut() {
-            if let Some(&(_, goal_)) = new_goals.iter()
-                                               .find(|&&(ent_id, _)| ent_id == ent.id) {
-                if let Some(goal) = goal_ {
-                    match goal {
-                        Goal::Attack(attack_type, id, pos) => {
-                            ent.actions = path_next_to(&self.map, ent, 
-                                                       &self.creature_types, pos);
-                            let (action, goal) = Action::attack(id, pos, ent.creature_id,
-                                                                &self.creature_types);
-                            ent.actions.push_back(action);
-                            ent.goal = Some(goal);
-                        },
-                    }
-                } else {
-                    // Clear goal and actions, since goal cannot be done
+                Delete(ent_id) => {
+                    let ent = self.entities.iter_mut()
+                                           .find(|ent| ent.id == ent_id)
+                                           .unwrap();
                     ent.goal = None;
                     ent.actions.clear();
-                }
+                },
+                _ => unimplemented!(),
             }
         }
     }
@@ -268,6 +270,13 @@ impl GameState {
         self.cur_id += 1;
         self.cur_id
     }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+enum NewGoalPoss {
+    NoChange,
+    Delete(EntID),
+    NewGoal(EntID, Goal),
 }
 
 impl ServerPlayer {
