@@ -142,6 +142,14 @@ pub fn new(map: Map,  entities: Entities,
         }
     }
 
+    pub fn move_cursor(&mut self, pos: [f64; 2]) {
+        self.mouse_pos = (pos[0], pos[1]);
+
+        if let Some(selector_pos) = self.selector_start {
+            self.selector = Some((selector_pos, self.mouse_pos));
+        }
+    }
+
     pub fn release_button(&mut self, button: Button) {
         if button == Button::Mouse(MouseButton::Left) {
 
@@ -271,14 +279,6 @@ pub fn new(map: Map,  entities: Entities,
 
     pub fn attack_mode(&mut self) {
         self.sel_state = SelState::Attack;
-    }
-
-    pub fn move_cursor(&mut self, pos: [f64; 2]) {
-        self.mouse_pos = (pos[0], pos[1]);
-
-        if let Some(selector_pos) = self.selector_start {
-            self.selector = Some((selector_pos, self.mouse_pos));
-        }
     }
 
     pub fn move_to(&mut self) {
