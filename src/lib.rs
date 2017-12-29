@@ -6,6 +6,7 @@ extern crate glutin_window;
 extern crate graphics;
 #[macro_use]
 extern crate log;
+extern crate ncurses;
 extern crate opengl_graphics;
 extern crate pathfinding;
 extern crate piston;
