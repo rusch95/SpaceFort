@@ -105,9 +105,9 @@ impl ClientNetIn {
 
         try!(self.stream.read_exact(&mut n_buf));
         let n = u8_array_to_usize(&n_buf[..], 0);
-        let amt = try!(self.stream.read(&mut buf[..n]));
+        try!(self.stream.read_exact(&mut buf[..n]));
 
-        let decoded: ServerMsg = deserialize(&buf[..amt]).unwrap();
+        let decoded: ServerMsg = deserialize(&buf[..n]).unwrap();
 
         Ok(decoded)
     }

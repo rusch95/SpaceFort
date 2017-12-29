@@ -9,7 +9,10 @@ use std::net::Ipv4Addr;
 
 // Local imports
 use spacefort::*;
+#[cfg(feature = "default")]
 use game::client::init_client;
+#[cfg(feature = "term")]
+use game::term_client::init_client;
 use map::tiles::blank_map;
 use entities::entity::init_entities;
 use net::client::init_network;
@@ -31,7 +34,7 @@ fn main() {
 
     let (entities, creature_types) = init_entities(root);
     // TODO Change this to be a command line parameter
-    let server_ip = Ipv4Addr::new(127, 0, 0, 1);
+    let server_ip = Ipv4Addr::new(18, 248, 0, 121);
     let comm = init_network(server_ip);
 
     init_client(map, entities, creature_types, comm).start();

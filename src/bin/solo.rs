@@ -12,7 +12,10 @@ use std::thread;
 // Local imports
 use spacefort::*;
 use game::server::init_server;
+#[cfg(feature = "default")]
 use game::client::init_client;
+#[cfg(feature = "term")]
+use game::term_client::init_client;
 use map::tiles::init_map;
 use map::tiles::blank_map;
 use entities::entity::init_entities;

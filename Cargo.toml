@@ -8,7 +8,7 @@ bincode = "0.9"
 clippy = {version = "*", optional = true}
 log = "0.3"
 env_logger = "*"
-ncurses = "*"
+ncurses = {version = "*", optional = true}
 ordered-float = "0.5.0"
 pathfinding = ">=0.1"
 piston = ">=0.32"
@@ -23,3 +23,4 @@ toml = ">=0.4"
 
 [features]
 default = []
+term = ["ncurses"]

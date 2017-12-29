@@ -1,5 +1,6 @@
 pub mod base;
-pub mod tiles;
 pub mod constants;
-pub mod utils;
+#[cfg(feature = "term")]
 pub mod term;
+pub mod tiles;
+pub mod utils;
