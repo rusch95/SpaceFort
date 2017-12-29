@@ -1,4 +1,5 @@
 use std::sync::mpsc::{Receiver, Sender, SyncSender};
+use std::sync::mpsc::{channel, sync_channel};
 use std::net::{TcpStream};
 
 use game::base::*;

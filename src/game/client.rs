@@ -143,7 +143,6 @@ pub fn new(map: Map,  entities: Entities,
     }
 
     pub fn move_cursor(&mut self, pos: [f64; 2]) {
-        debug!("Pos {:?}", pos);
         self.mouse_pos = (pos[0], pos[1]);
 
         if let Some(selector_pos) = self.selector_start {
@@ -155,7 +154,6 @@ pub fn new(map: Map,  entities: Entities,
         if button == Button::Mouse(MouseButton::Left) {
 
             if let Some(selector) = self.selector {   
-                debug!("Selector: {:?}", selector);
                 // Check for click on same spot
                 if sel_dist(selector) < CLICK_THRESH {
                     let (pos, _) = selector;
@@ -171,7 +169,6 @@ pub fn new(map: Map,  entities: Entities,
 
                 } else {
                     let tiles_selector = win_to_tile_selector(selector, &self.ch);
-                    debug!("Tiles Selector: {:?}", tiles_selector);
 
                     match self.sel_state {
                         SelState::Ents => {
@@ -223,7 +220,7 @@ pub fn new(map: Map,  entities: Entities,
                 warn!("Booted");
                 self.done = true;
             }
-            _ => {info!("Received {:?}", msg)},
+            _ =>  unimplemented!(),
         };
     }
 

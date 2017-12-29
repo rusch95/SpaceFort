@@ -54,32 +54,36 @@ impl Server {
             }
             now = Instant::now();
 
-            // Network Updates
-            while let Some((stream, player_id)) = self.comm.check_incoming_streams() {
-                self.add_player(player_id, stream);
-            }
+            self.update();
+        }
+    }
 
-            while let Some((msg, player_id)) = self.comm.check_incoming_msgs() {
-                self.dispatch(msg, player_id);
-            }
+    pub fn update(&mut self) {
+        // Network Updates
+        while let Some((stream, player_id)) = self.comm.check_incoming_streams() {
+            self.add_player(player_id, stream);
+        }
 
-            // Player Updates
-            self.player_update();
+        while let Some((msg, player_id)) = self.comm.check_incoming_msgs() {
+            self.dispatch(msg, player_id);
+        }
 
-            // World Updates
-            let mut changes = self.world_update();
+        // Player Updates
+        self.player_update();
 
-            for change in changes.drain(..) {
-                match change {
-                    Change::TileChange(pos) => self.tile_update(pos),
-                    Change::EntChange(_) => {},
-                };
-            }
+        // World Updates
+        let mut changes = self.world_update();
 
-            let player_ids: Vec<PlayerID> = self.players.keys().cloned().collect();
-            for player_id in player_ids {
-                self.ent_updates(player_id);
-            }
+        for change in changes.drain(..) {
+            match change {
+                Change::TileChange(pos) => self.tile_update(pos),
+                Change::EntChange(_) => {},
+            };
+        }
+
+        let player_ids: Vec<PlayerID> = self.players.keys().cloned().collect();
+        for player_id in player_ids {
+            self.ent_updates(player_id);
         }
     }
 
@@ -142,10 +146,21 @@ impl Server {
         }
     }
 
-    pub fn attack(&mut self, player_id: PlayerID, attacker: EntID, 
-                  defender: EntID) {
-        if let Some(player) = self.players.get_mut(&player_id) {
-            player.ents_attack(&[attacker], defender, &mut self.g_state);
+    pub fn attack(&mut self, player_id: PlayerID, attacker_id: EntID, target_id: EntID) {
+        if let Some(_) = self.players.get(&player_id) {
+            let (mut attackers, mut defenders): (Vec<&mut Entity>, Vec<&mut Entity>) =
+                 self.g_state.entities.iter_mut()
+                                      .partition( |ent| ent.team_id == Some(player_id));
+
+            if let Some(target) = defenders.iter()
+                                           .find(|ent| ent.id == target_id) {
+                if let Some(mut attacker) = attackers.iter_mut()
+                                                     .find(|ent| ent.id == attacker_id) {
+                    let (_, goal) = Action::attack(target.id, target.pos, attacker.creature_id,
+                                                   &self.g_state.creature_types);
+                    attacker.goal = Some(goal);
+                }
+            }
         }
     }
 
@@ -158,35 +173,16 @@ impl Server {
             ClientMsg::EntAttack(attacker, target) => self.attack(player_id, attacker, target),
             ClientMsg::EntMove(ent_id, pos) => self.ent_move(ent_id, pos),
             ClientMsg::Leave() => {}, 
-            _ => {},
+            _ => unimplemented!(),
         }
     }
 }
+
 impl ServerPlayer {
     pub fn new(player_id: PlayerID) -> ServerPlayer {
         ServerPlayer {
             player_id: player_id,
             tasks: Vec::new(),
-        }
-    }
-
-    pub fn ents_attack(&mut self, attackers: &[EntID], target_id: EntID, 
-                       g_state: &mut GameState) {
-        let team_id = Some(self.player_id);
-        let (mut team_ents, mut else_ents): (Vec<&mut Entity>, Vec<&mut Entity>) =
-             g_state.entities.iter_mut()
-                             .partition( |ent| ent.team_id == team_id);
-
-        if let Some(target) = else_ents.iter_mut()
-                                           .find(|ent| (*ent).id == target_id) {
-            for ent_id in attackers {
-                if let Some(mut ent) = team_ents.iter_mut()
-                                                .find(|ent| (*ent).id == *ent_id) {
-                    let (_, goal) = Action::attack(target.id, target.pos, ent.creature_id,
-                                                   &g_state.creature_types);
-                    ent.goal = Some(goal);
-                }
-            }
         }
     }
 }
