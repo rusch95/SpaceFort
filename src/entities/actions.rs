@@ -100,11 +100,18 @@ pub fn select_entities<F>(pred: F, ents: &[Entity],
     let (s1, s2) = rotate_selector(selector);
 
     ents.iter()
-        .filter(|ent| s1 <= ent.pos && 
-                ent.pos <= s2 && 
-                pred(ent))
+        .filter(|ent| pos_lte(s1, ent.pos) && 
+                      pos_lte(ent.pos, s2) && 
+                      pred(ent))
         .map(|ent| ent.id)
         .collect()
+}
+
+fn pos_lte(pos1: Pos, pos2: Pos) -> bool {
+    let (x1, y1, z1) = pos1;
+    let (x2, y2, z2) = pos2;
+
+    x1 <= x2 && y1 <= y2 && z1 <= z2
 }
 
 pub fn add_dig_tasks(tasks: &mut Tasks, map: &mut Map, selector: TilesSelector) {

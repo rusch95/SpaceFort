@@ -53,7 +53,7 @@ pub fn init_client(map: Map, entities: Entities, creature_types: CreatureMap,
 
 impl Client {
     // Top level global state
-    pub fn new(map: Map,  entities: Entities, 
+pub fn new(map: Map,  entities: Entities, 
                creature_types: CreatureMap, comm: NetComm) -> Client {
         let mut events = Events::new(EventSettings::new());
         events.set_ups(240);
@@ -146,6 +146,7 @@ impl Client {
         if button == Button::Mouse(MouseButton::Left) {
 
             if let Some(selector) = self.selector {   
+                debug!("Selector: {:?}", selector);
                 // Check for click on same spot
                 if sel_dist(selector) < CLICK_THRESH {
                     let (pos, _) = selector;
@@ -161,6 +162,7 @@ impl Client {
 
                 } else {
                     let tiles_selector = win_to_tile_selector(selector, &self.ch);
+                    debug!("Tiles Selector: {:?}", tiles_selector);
 
                     match self.sel_state {
                         SelState::Ents => {
