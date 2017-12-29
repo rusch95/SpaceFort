@@ -13,7 +13,6 @@
 * ~~Highlight selected units~~
 * ~~Click to select single unit~~
 * ~~Make attack correct~~
-* Unit spawning in section when player joins
 * Buildings that spawn units
 
 
