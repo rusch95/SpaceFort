@@ -30,7 +30,8 @@ fn main() {
     info!("Starting server binary");
     let map = init_map(root);
     let (s_entities, s_creature_types) = init_entities(root);
-    let server_comm = init_s_network();
+    let server_ip = Ipv4Addr::new(0, 0, 0, 0);
+    let server_comm = init_s_network(server_ip);
     thread::spawn(move|| {
         init_server(map, s_entities, s_creature_types, server_comm).start();
     });
@@ -38,8 +39,8 @@ fn main() {
     info!("Starting client");
     let client_map = blank_map(root);
     let (c_entities, c_creature_types) = init_entities(root);
-    let server_ip = Ipv4Addr::new(127, 0, 0, 1);
-    let client_comm = init_c_network(server_ip);
+    let localhost = Ipv4Addr::new(127, 0, 0, 1);
+    let client_comm = init_c_network(localhost);
     init_client(client_map, c_entities, c_creature_types, client_comm).start();
 
     info!("Closing solo");
