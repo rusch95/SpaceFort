@@ -20,18 +20,17 @@
 0.3 Release - Cool / Technical Debt Demo
 =============================
 
-* Fix click
-* Extend test suite
-* Map Editor
-* Ramps and Floors as property
+* ~~Fix click~~
+* Test Suite
 * Macro up the toml loading
-* Restore ascii to functionality
-    - Important for hacker types
 * Add a webclient
     - Makes it trivial to showcase the game to new people 
+* Restore ascii to functionality
+    - Important for hacker types
+* Map Editor
+* Ramps and Floors as property
 * Investigate switching to SDL2
 * Tileset
-* Test Suite
 
 
 0.4 Release - Actually a Game

@@ -143,6 +143,7 @@ pub fn new(map: Map,  entities: Entities,
     }
 
     pub fn move_cursor(&mut self, pos: [f64; 2]) {
+        debug!("Pos {:?}", pos);
         self.mouse_pos = (pos[0], pos[1]);
 
         if let Some(selector_pos) = self.selector_start {
