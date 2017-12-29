@@ -17,11 +17,21 @@ pub struct CameraHandle {
 }
 
 impl CameraHandle {
+    pub fn new(xlen: i32, ylen: i32, x: i32, y: i32, z: i32) -> CameraHandle {
+        CameraHandle {
+            xlen: xlen,
+            ylen: ylen,
+            x: x,
+            y: y,
+            z: z,
+        }
+    }
+
     pub fn in_bounds(&self, pos: &Pos) -> bool {
         let (x, y, z) = *pos;
         z == self.z &&
-        (self.x <= x) && (x <= self.x + self.xlen) &&
-        (self.y <= y) && (y <= self.y + self.ylen)
+        (self.x <= x) && (x < self.x + self.xlen) &&
+        (self.y <= y) && (y < self.y + self.ylen)
     }
 }
 

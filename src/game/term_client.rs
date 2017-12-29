@@ -53,7 +53,7 @@ pub fn new(map: Map,  entities: Entities,
             player_id: None,
             team_id: None,
 
-            ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
+            ch: CameraHandle::new(80, 40, 0, 0, 1),
             mouse_pos: (0.0, 0.0),
             selector: None,
             selected_entities: Vec::new(),
@@ -75,6 +75,14 @@ pub fn new(map: Map,  entities: Entities,
         init_term();
 
         loop {
+
+            self.render();
+            self.get_input();
+            
+            // Network Updates
+            while let Some(msg) = self.comm.get_incoming_msgs() {
+                self.dispatch(msg);
+            }
 
             if self.done {
                 end_term();      
@@ -102,7 +110,7 @@ pub fn new(map: Map,  entities: Entities,
         func(self);
 
         //Debuging info
-        mvprintw(50, 5, &format!("TermHandle x:{}, y:{}, z:{}", 
+        mvprintw(50, 5, &format!("TermHandle x:{}, y:{}, z:{}     ", 
                                  self.ch.x, self.ch.y, self.ch.z));
     }
 
@@ -204,6 +212,10 @@ pub fn new(map: Map,  entities: Entities,
         }
 
         self.selected_entities.clear();
+    }
+
+    pub fn render(&mut self) {
+        render(self);
     }
 
     pub fn get_snap(&self) -> MapSnapshot {
