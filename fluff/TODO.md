@@ -22,7 +22,7 @@
 * ~~Fix click~~
 * ~~Test Suite~~
 * Macro up the toml loading
-* Restore ascii to functionality
+* ~~Restore ascii to functionality~~
     - Important for hacker types
 * Add a webclient
     - Makes it trivial to showcase the game to new people 
@@ -52,6 +52,7 @@ Feature Stack
 * Clouds
 * Save games
 * Render opacity
+* ASCII with full game support 
 
 
 Nice Things
