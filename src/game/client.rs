@@ -20,6 +20,7 @@ const CLICK_THRESH: f64 = 40.0;
 
 pub struct Client {
     pub player_id: Option<PlayerID>,
+    pub team_id: TeamID,
 
     pub ch: CameraHandle,
     mouse_pos: WinPos,
@@ -61,6 +62,7 @@ pub fn new(map: Map,  entities: Entities,
         Client {
             // Start with none and initialize when connected
             player_id: None,
+            team_id: None,
 
             ch: CameraHandle {xlen: X_NUM_TILES, ylen: Y_NUM_TILES, x: 0, y: 0, z: 1},
             mouse_pos: (0.0, 0.0),
@@ -174,7 +176,7 @@ pub fn new(map: Map,  entities: Entities,
                         SelState::Ents => {
                             self.selected_entities = 
                                 select_entities(
-                                    |ent| ent.team_id == self.player_id,
+                                    |ent| ent.team_id == self.team_id,
                                     &self.entities, 
                                     tiles_selector);
                         },
@@ -197,7 +199,7 @@ pub fn new(map: Map,  entities: Entities,
 
     fn add_attack_goal(&mut self, tiles_selector: TilesSelector) {
         let mut targets = select_entities(
-                              |ent| ent.team_id != self.player_id,
+                              |ent| ent.team_id != self.team_id,
                               &self.entities,
                               tiles_selector);
 
@@ -226,6 +228,8 @@ pub fn new(map: Map,  entities: Entities,
 
     fn join(&mut self, player_join: PlayerJoin) {
         self.player_id = Some(player_join.player_id);
+        self.team_id = player_join.team_id;
+        // Currently there is no mulitplayer
         info!("Joined as Player {}", player_join.player_id);
 
         self.map.resize(player_join.map_dim);

@@ -1,5 +1,4 @@
 use std::sync::mpsc::{Receiver, Sender, SyncSender};
-use std::sync::mpsc::{channel, sync_channel};
 use std::net::{TcpStream};
 
 use game::base::*;
@@ -45,13 +44,15 @@ pub enum ServerMsg {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
 pub struct PlayerJoin {
     pub player_id: PlayerID,
+    pub team_id: TeamID,
     pub map_dim: Pos
 }
 
 impl PlayerJoin {
-    pub fn new(player_id: PlayerID, map_dim: Pos) -> PlayerJoin {
+    pub fn new(player_id: PlayerID, team_id: TeamID, map_dim: Pos) -> PlayerJoin {
         PlayerJoin { 
             player_id: player_id, 
+            team_id: team_id,
             map_dim: map_dim,
         }
     }

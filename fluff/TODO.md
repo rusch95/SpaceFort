@@ -21,12 +21,12 @@
 =============================
 
 * ~~Fix click~~
-* Test Suite
+* ~~Test Suite~~
 * Macro up the toml loading
-* Add a webclient
-    - Makes it trivial to showcase the game to new people 
 * Restore ascii to functionality
     - Important for hacker types
+* Add a webclient
+    - Makes it trivial to showcase the game to new people 
 * Map Editor
 * Ramps and Floors as property
 * Investigate switching to SDL2
@@ -60,7 +60,8 @@ Nice Things
 
 * Remove players if they disconnect
 * Add solo bin, so no need to do server / client shindig
-* Have PlayerID and TeamID, so that multiple players can be on the same team
+* ~~Have PlayerID and TeamID, so that multiple players can be on the same team~~
+* Switch TeamID to enum None, Nature, Team(ID), Evil
 
 
 Bugs
@@ -68,3 +69,5 @@ Bugs
 
 * Can't run release mode on windows because of OpenGL issue
 * Chunking is a bit broken. Make proper tests and fix any small issues.
+* Currently, if a task is subsummed by an assigned task, the task is dropped. Fix it so the task
+ownership system actually works.

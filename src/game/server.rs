@@ -21,6 +21,7 @@ pub struct Server {
 
 pub struct ServerPlayer {
     pub player_id: PlayerID,
+    pub team_id: TeamID,
     pub tasks: Tasks,
 }
 
@@ -105,9 +106,9 @@ impl Server {
     }
 
     pub fn add_player(&mut self, player_id: PlayerID, stream: TcpStream) {
-        self.players.insert(player_id, ServerPlayer::new(player_id));
+        self.players.insert(player_id, ServerPlayer::new(player_id, Some(player_id)));
 
-        let player_join = PlayerJoin::new(player_id, self.g_state.map.size());
+        let player_join = PlayerJoin::new(player_id, Some(player_id), self.g_state.map.size());
 
         info!("Adding Player {} at addr {:?}", player_id, stream);
         self.comm.setup_out_stream((stream, player_id));
@@ -147,10 +148,10 @@ impl Server {
     }
 
     pub fn attack(&mut self, player_id: PlayerID, attacker_id: EntID, target_id: EntID) {
-        if let Some(_) = self.players.get(&player_id) {
+        if let Some(player) = self.players.get(&player_id) {
             let (mut attackers, mut defenders): (Vec<&mut Entity>, Vec<&mut Entity>) =
                  self.g_state.entities.iter_mut()
-                                      .partition( |ent| ent.team_id == Some(player_id));
+                                      .partition( |ent| ent.team_id == player.team_id);
 
             if let Some(target) = defenders.iter()
                                            .find(|ent| ent.id == target_id) {
@@ -179,9 +180,10 @@ impl Server {
 }
 
 impl ServerPlayer {
-    pub fn new(player_id: PlayerID) -> ServerPlayer {
+    pub fn new(player_id: PlayerID, team_id: TeamID) -> ServerPlayer {
         ServerPlayer {
             player_id: player_id,
+            team_id: team_id,
             tasks: Vec::new(),
         }
     }

@@ -97,7 +97,7 @@ fn test_dig_single_block() {
     let mut server = setup();
     let pos = (28, 19, 1);
     assert!(!server.g_state.map.passable(pos));
-    server.players.insert(1, server::ServerPlayer::new(1));
+    server.players.insert(1, server::ServerPlayer::new(1, Some(1)));
     server.dig(1, (pos, pos));
     for _ in 0..6000 {
         server.update()
