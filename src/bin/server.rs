@@ -5,6 +5,7 @@ extern crate bincode;
 extern crate spacefort;
 
 // Std lib imports
+use std::net::Ipv4Addr;
 use std::path::Path;
 
 // Local imports
@@ -26,7 +27,8 @@ fn main() {
     // REFACTOR Maybe should move non-essential inits into init_game
     let map = init_map(root);
     let (entities, creature_types) = init_entities(root);
-    let comm = init_network();
+    let server_ip = Ipv4Addr::new(0, 0, 0, 0);
+    let comm = init_network(server_ip);
 
     init_server(map, entities, creature_types, comm).start();
 

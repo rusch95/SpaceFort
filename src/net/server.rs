@@ -26,10 +26,9 @@ pub struct NetComm {
     send_stream_from_game: SendStream,
 }
 
-pub fn init_network() -> NetComm {
+pub fn init_network(server_ip: Ipv4Addr) -> NetComm {
 
-    let localhost = Ipv4Addr::new(127, 0, 0, 1);
-    let conn = SocketAddrV4::new(localhost , SERVER_PORT);
+    let conn = SocketAddrV4::new(server_ip, SERVER_PORT);
     let listener = TcpListener::bind(conn).unwrap();
 
     let (send_outgoing, recv_outgoing) = channel();
