@@ -28,7 +28,8 @@
     - Makes it trivial to showcase the game to new people 
 * Map Editor
 * Ramps and Floors as property
-* Investigate switching to SDL2
+* ~~Investigate switching to SDL2~~
+    - Nah
 * Tileset
 
 

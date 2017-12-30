@@ -226,7 +226,6 @@ pub fn do_actions(entities: &mut Entities, map: &mut Map) -> Vec<Change> {
     changes
 }
 
-// TODO Add task prioritization i.e. dig a square that is close, instead of one that is far
 pub fn schedule_actions(entities: &mut Entities, tasks: &mut Tasks, map: &Map, 
                         creature_types: &CreatureMap, team_id: TeamID) {
     for ent in entities.iter_mut().filter(|ent| ent.actions.is_empty() &&
