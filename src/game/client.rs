@@ -10,6 +10,7 @@ use game::base::*;
 use io::base::*;
 use io::constants::*;
 use io::utils::*;
+use io::textures::*;
 use io::tiles::{render, init_graphics};
 use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
 use net::base::{ServerMsg, PlayerJoin};
@@ -38,6 +39,7 @@ pub struct Client {
     events: Events,
     pub gl: GlGraphics,
     window: Window,
+    pub textures: Textures, 
     comm: NetComm,
 
     // State to sync from GameState
@@ -73,6 +75,7 @@ pub fn new(map: Map,  entities: Entities,
             done: false,
 
             window: init_graphics(),
+            textures: load_textures(),
             events: events,
             gl: GlGraphics::new(OPEN_GL_VERSION),
             comm: comm,

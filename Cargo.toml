@@ -12,6 +12,7 @@ ncurses = {version = "*", optional = true}
 ordered-float = "0.5.0"
 pathfinding = ">=0.1"
 piston = ">=0.32"
+piston_window = "0.74.0"
 piston2d-graphics = ">=0.21"
 pistoncore-glutin_window = ">=0.37"
 piston2d-opengl_graphics = ">=0.44"

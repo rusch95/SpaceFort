@@ -4,9 +4,9 @@ use std::path::Path;
 use std::io::{Read, Write, BufWriter, Error};
 
 use game::base::*;
-use io::base::CameraHandle;
+use io::base::*;
 use map::constants::*;
-use map::material::{init_materials, MaterialID, Material, Materials};
+use map::material::*;
 
 
 pub type Tiles = Vec<Tile>;
@@ -26,7 +26,7 @@ pub struct Tile {
     pub marked: bool,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct Map {
     //Holds the terrain info as a vector of tiles
     tiles: Tiles, 

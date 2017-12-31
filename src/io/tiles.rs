@@ -8,6 +8,7 @@ use opengl_graphics::GlGraphics;
 
 use io::base::*;
 use io::constants::*;
+use io::textures::*;
 use io::utils::*;
 use game::base::*;
 use game::client::Client;
@@ -39,19 +40,20 @@ pub fn render(player: &mut Client, args: &RenderArgs) {
     let creature_types = &player.creature_types;
     let gl = &mut player.gl;
     let selected_ents = &player.selected_entities;
+    let textures = &player.textures;
 
     gl.draw(args.viewport(), |c, gl| {
         // Clear the screen.
         clear(BLACK, gl);
 
-        draw_tiles(c, gl, &snap, map);
+        draw_tiles(c, gl, &snap, map, textures);
         draw_entities(c, gl, ch, entities, creature_types, selected_ents);
         draw_selector(c, gl, selector);
     });
 }
 
-fn draw_tiles(c: Context, gl: &mut GlGraphics, 
-              snap: &MapSnapshot, map: &Map) {
+fn draw_tiles(c: Context, gl: &mut GlGraphics, snap: &MapSnapshot, 
+              map: &Map, textures: &Textures) {
     let square = rectangle::square(0.0, 0.0, X_PIXELS);
 
     for y in 0..snap.ylen {
@@ -65,7 +67,13 @@ fn draw_tiles(c: Context, gl: &mut GlGraphics,
                 Some(material) => { material.color },
                 None => BLACK,
             };
-            rectangle(color, square, transform, gl);
+            if let Some(texture) = textures.get(&tile.material) {
+                Image::new()
+                    .rect(rectangle::square(0.0, 0.0, X_PIXELS))
+                    .draw(texture, &c.draw_state, transform, gl);
+            } else {
+                rectangle(color, square, transform, gl);
+            }
         }
     }
 }

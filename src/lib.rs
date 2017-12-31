@@ -11,6 +11,7 @@ extern crate ncurses;
 extern crate opengl_graphics;
 extern crate pathfinding;
 extern crate piston;
+extern crate piston_window;
 extern crate rand;
 #[macro_use]
 extern crate serde_derive;
