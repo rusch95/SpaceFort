@@ -9,9 +9,9 @@ use map::material::*;
 
 pub type Textures = HashMap<MaterialID, Texture>;
 
-pub fn load_textures() -> Textures {
+pub fn load_textures(root: &Path) -> Textures {
     let mut textures = HashMap::new();
-    let path = Path::new("../static/inc/textures/materials/grass.png");
+    let path = root.join("static/inc/textures/materials/grass.png");
     let settings = TextureSettings::new();
     let texture = Texture::from_path(path, &settings).unwrap();
     textures.insert(7, texture);

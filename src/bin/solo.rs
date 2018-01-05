@@ -16,11 +16,6 @@ use game::server::init_server;
 use game::client::init_client;
 #[cfg(feature = "term")]
 use game::term_client::init_client;
-use map::tiles::init_map;
-use map::tiles::blank_map;
-use entities::entity::init_entities;
-use net::server::init_network as init_s_network;
-use net::client::init_network as init_c_network;
 
 
 fn main() {   
@@ -29,22 +24,15 @@ fn main() {
 
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
 
-    // REFACTOR Maybe should move non-essential inits into init_game
-    info!("Starting server binary");
-    let map = init_map(root);
-    let (s_entities, s_creature_types) = init_entities(root);
     let server_ip = Ipv4Addr::new(0, 0, 0, 0);
-    let server_comm = init_s_network(server_ip);
     thread::spawn(move|| {
-        init_server(map, s_entities, s_creature_types, server_comm).start();
+        info!("Starting server");
+        init_server(root, server_ip).start();
     });
 
     info!("Starting client");
-    let client_map = blank_map(root);
-    let (c_entities, c_creature_types) = init_entities(root);
     let localhost = Ipv4Addr::new(127, 0, 0, 1);
-    let client_comm = init_c_network(localhost);
-    init_client(client_map, c_entities, c_creature_types, client_comm).start();
+    init_client(root, localhost).start();
 
     info!("Closing solo");
 }

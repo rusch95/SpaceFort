@@ -1,3 +1,6 @@
+use std::net::Ipv4Addr;
+use std::path::Path;
+
 use std::net::TcpStream;
 use std::time::{Duration, Instant};
 use std::collections::HashMap;
@@ -11,6 +14,9 @@ use entities::entity::schedule_actions;
 use map::tiles::Map;
 use net::base::{ClientMsg, PlayerJoin};
 use net::server::NetComm;
+use map::tiles::init_map;
+use entities::entity::init_entities;
+use net::server::init_network;
 
 
 pub struct Server {
@@ -25,8 +31,11 @@ pub struct ServerPlayer {
     pub tasks: Tasks,
 }
 
-pub fn init_server(map: Map, entities: Entities, creature_types: CreatureMap, 
-                   comm: NetComm) -> Server {
+pub fn init_server(root: &Path, server_ip: Ipv4Addr) -> Server {
+    let map = init_map(root);
+    let (entities, creature_types) = init_entities(root);
+    let comm = init_network(server_ip);
+
     Server::new(map, entities, creature_types, comm)
 }
 

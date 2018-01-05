@@ -1,10 +1,16 @@
+// Std lib imports
+use std::net::Ipv4Addr;
+use std::path::Path;
+
+// Crate imports
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::GlGraphics;
 use piston::event_loop::*;
 use piston::input::*;
 
+// Local imports
 use entities::creatures::CreatureMap;
-use entities::entity::{Entities, EntID, EntSnaps};
+use entities::entity::*;
 use entities::actions::{select_entities};
 use game::base::*;
 use io::base::*;
@@ -12,9 +18,9 @@ use io::constants::*;
 use io::utils::*;
 use io::textures::*;
 use io::tiles::{render, init_graphics};
-use map::tiles::{Map, MapSnapshot, handle_to_snapshot};
+use map::tiles::*;
 use net::base::{ServerMsg, PlayerJoin};
-use net::client::NetComm;
+use net::client::*;
 
 
 const CLICK_THRESH: f64 = 40.0;
@@ -49,15 +55,30 @@ pub struct Client {
     pub ticks: Ticks,
 }
 
-pub fn init_client(map: Map, entities: Entities, creature_types: CreatureMap,
-                   comm: NetComm) -> Client {
-    Client::new(map, entities, creature_types, comm)
+pub fn init_client(root: &Path, server_ip: Ipv4Addr) -> Client {
+    // The client starts with an unsized blank map that 
+    // is then resized onced connected to a server and is 
+    // then populated with chunks downloaded from the server
+    let map = blank_map(root);
+
+    // Other initializations
+    let (entities, creature_types) = init_entities(root);
+    let window = init_graphics();
+    let comm = init_network(server_ip);
+
+    // Must be done after window creation for OpenGL reasons
+    let textures = load_textures(root);
+
+    info!("Done initializing client");
+    Client::new(map, entities, creature_types, comm, window, textures)
 }
 
 impl Client {
     // Top level global state
-pub fn new(map: Map,  entities: Entities, 
-               creature_types: CreatureMap, comm: NetComm) -> Client {
+    pub fn new(map: Map, entities: Entities, creature_types: CreatureMap,
+               comm: NetComm, window: Window, textures: Textures) -> Client {
+
+        // Initializations
         let mut events = Events::new(EventSettings::new());
         events.set_ups(240);
 
@@ -74,8 +95,8 @@ pub fn new(map: Map,  entities: Entities,
             sel_state: SelState::Ents,
             done: false,
 
-            window: init_graphics(),
-            textures: load_textures(),
+            window: window,
+            textures: textures,
             events: events,
             gl: GlGraphics::new(OPEN_GL_VERSION),
             comm: comm,
