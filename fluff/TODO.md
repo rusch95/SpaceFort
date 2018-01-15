@@ -13,6 +13,7 @@
 * ~~Highlight selected units~~
 * ~~Click to select single unit~~
 * ~~Make attack correct~~
+* Items
 * Buildings that spawn units
 
 
@@ -24,36 +25,43 @@
 * Macro up the toml loading
 * ~~Restore ascii to functionality~~
     - Important for hacker types
-* Add a webclient
-    - Makes it trivial to showcase the game to new people 
 * Map Editor
 * Ramps and Floors as property
 * ~~Investigate switching to SDL2~~
     - Nah
-* Tileset
+* Resource collection and cost
+* Tech tree
+* Improved attack system
 
 
 0.4 Release - Actually a Game
 ==============================
 
+* Tileset
 * More creatures
-* Start Menu
-* Items
+* Start Menu 
+* Better UI 
 * Fix pathfinding int hack
 * Early Procedural Generation
 
 
+0.5 Release - Delayed Things I Think Are Good
+==============================
+
+* Ambient Movement
+* Liquids
+* Add a webclient
+    - Makes it trivial to showcase the game to new people 
+* ASCII with full game support 
+* Save games
+
 Feature Stack
 =================
 
-* Ambient Movement
+* Clouds
 * Add momentum changing cost to pathfinding
 * Physics
-* Liquids
-* Clouds
-* Save games
 * Render opacity
-* ASCII with full game support 
 
 
 Nice Things
