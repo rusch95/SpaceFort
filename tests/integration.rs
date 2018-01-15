@@ -22,7 +22,7 @@ fn setup() -> server::Server {
     let (entities, creature_types) = entity::init_entities(root);
     let comm = stub_comm();
 
-    server::init_server(map, entities, creature_types, comm)
+    server::Server::new(map, entities, creature_types, comm)
 }
 
 fn stub_comm() -> NetComm {
