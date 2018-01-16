@@ -12,7 +12,6 @@ use map::material::*;
 pub type Tiles = Vec<Tile>;
 
 pub type PosUnit = i32;
-
 const CHUNK_TILES_X: PosUnit = 8;
 const CHUNK_TILES_Y: PosUnit = 8;
 const CHUNK_TILES_Z: PosUnit = 1;
@@ -23,6 +22,7 @@ const CHUNK_TILES_Z: PosUnit = 1;
 pub struct Tile {
     //Single map unit
     pub material: MaterialID,
+    pub mode: Mode,
     pub marked: bool,
 }
 
@@ -56,7 +56,7 @@ pub struct MapChunk {
 
 pub fn init_map(root: &Path) -> Map {
     info!("Initializing map");
-    let test_path = root.join("static/inc/maps/arena.sfm");
+    let test_path = root.join("static/inc/maps/smol_map_excel.sfm.csv");
     let path_str = test_path
                    .to_str()
                    .expect("Unicode decode error");
@@ -68,9 +68,12 @@ pub fn init_map(root: &Path) -> Map {
 }
 
 impl Tile {
-    fn new(material: MaterialID) -> Tile {
-        Tile { material: material,
-               marked: false }
+    fn new(material: MaterialID, mode: Mode) -> Tile {
+        Tile { 
+            material: material,
+            mode: mode, 
+            marked: false,
+        }
     }
 }
 
@@ -269,8 +272,11 @@ impl Map {
     }
 
     pub fn passable(&self, pos: Pos) -> bool {
-        if let Some(material) = self.grab_material(pos) {
-            material.passable
+        if let Some(tile) = self.get_tile(pos) {
+            match tile.mode {
+                Mode::Block => false,
+                _ => true,
+            }
         } else {
             false
         }
@@ -351,28 +357,39 @@ pub fn blank_map(root: &Path) -> Map {
 }
 
 pub fn load_map(path: &str, materials: Materials) -> Result<Map, Error> {
-    //Load map from file. Currently unversioned so take heed.
-    //Map validation is not performed.
+    // Load map from file. Currently unversioned so take heed.
+    // Map validation is not performed.
     let mut f = try!(File::open(&path));
     let mut contents = String::new(); 
     try!(f.read_to_string(&mut contents));
 
     let mut tiles = Vec::new();
-    let (mut x, mut y, mut z) = (0i32, 0i32, 0i32); 
+    let (mut xlen, mut ylen, mut zlen) = (0i32, 0i32, 0i32); 
     for (i, line) in contents.lines().enumerate() {
         if i == 0 {
-            let mut split_line = line.split_whitespace();
-            x = split_line.next().unwrap().parse().unwrap();
-            y = split_line.next().unwrap().parse().unwrap();
-            z = split_line.next().unwrap().parse().unwrap();
+            let mut split_line = line.split(",");
+            let version: i32 = split_line.next().unwrap().parse().unwrap();
+            assert!(version >= 1);
+            xlen = split_line.next().unwrap().parse().unwrap();
+            ylen = split_line.next().unwrap().parse().unwrap();
+            zlen = split_line.next().unwrap().parse().unwrap();
         } else {
-            for word in line.split_whitespace() {
-                let number: u16 = word.parse().unwrap();
-                tiles.push(Tile::new(number));
+            for word in line.split(",") {
+                let mut word_parts = word.split(";");
+                if let Some(material_str) = word_parts.next() {
+                    if material_str.len() > 0 {
+                        let material: u16 = material_str.parse().unwrap();
+                        let mode: Mode = match word_parts.next() { 
+                            Some(mode_str) => to_mode(mode_str.parse().unwrap()).unwrap(),
+                            None => Mode::Block,
+                        };
+                        tiles.push(Tile::new(material, mode));
+                    }
+                }
             }
         }
     }
 
 
-    Ok(Map {tiles: tiles, materials: materials, xlen: x, ylen: y, zlen: z})
+    Ok(Map {tiles: tiles, materials: materials, xlen: xlen, ylen: ylen, zlen: zlen})
 }

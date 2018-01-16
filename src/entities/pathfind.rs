@@ -1,4 +1,5 @@
 use game::base::Pos;
+use map::constants::*;
 use map::tiles::Map;
 use entities::actions::{Action, Actions, ActionType};
 use entities::entity::Entity;
@@ -69,9 +70,9 @@ fn succ(map: &Map, pos: &Pos) -> Vec<(Pos, i32)> {
     // Up and down
     // TODO Fix this as part of the ramp/stairs refactor
     if let Some(tile) = map.get_tile((x, y, z)) {
-        match tile.material {
-            8 => successors.push(((x, y, z - 1), UNIT_DIST)),
-            9 => successors.push(((x, y, z + 1), UNIT_DIST)),
+        match tile.mode {
+            Mode::UpStairs => successors.push(((x, y, z - 1), UNIT_DIST)),
+            Mode::DownStairs => successors.push(((x, y, z + 1), UNIT_DIST)),
             _ => (),
         }
     }
